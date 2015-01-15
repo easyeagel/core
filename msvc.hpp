@@ -16,23 +16,19 @@
 //=====================================================================================
 //
 
-#ifndef MR_MSVC_HPP
-#define MR_MSVC_HPP
+#pragma once
+
+#include<string>
 
 #ifdef _MSC_VER
-#include<string>
 
 #define constexpr
 #define alignas(Int)
+
+#ifdef noexcept
+    #undef noexcept
+#endif
 #define noexcept(Val)
-
-namespace std
-{
-
-}
 
 #endif  // _MSC_VER
 
-
-
-#endif  // MR_MSVC_HPP
