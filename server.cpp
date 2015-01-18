@@ -120,9 +120,9 @@ void IOService::run(SimpleCall&& callIn)
 {
     assert(!thread_);
     thread_.reset(new boost::thread(
-            [this, call=std::move(callIn)]() mutable
+            [this, callIn]() mutable
             {
-                threadRun(std::move(call));
+                threadRun(std::move(callIn));
             }
         )
     );

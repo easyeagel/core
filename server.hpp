@@ -561,6 +561,8 @@ public:
                     yield();
                     handle();
                 }
+                //默认栈尺寸正则表达式匹配时溢出
+                , boost::coroutines::attributes(1024*1024)
             );
         coroutineReset(ptr);
 
