@@ -70,7 +70,7 @@ public:
 
     bool bad() const
     {
-        return static_cast<bool>(static_cast<const Base&>(*this));
+        return 0!=static_cast<const Base&>(*this);
     }
 
     bool good() const
