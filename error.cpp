@@ -23,6 +23,16 @@
 namespace core
 {
 
+std::string ErrorCode::message() const
+{
+#ifdef _MSC_VER
+    return core::to(core::mbrtowc(Base::message()));
+#else
+    return Base::message();
+#endif
+
+}
+
 }
 
 

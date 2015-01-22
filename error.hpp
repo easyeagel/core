@@ -95,6 +95,8 @@ public:
         return what_ + ':' + message();
     }
 
+    std::string message() const;
+
 private:
     std::string what_;
 };
