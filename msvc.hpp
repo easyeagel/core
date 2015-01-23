@@ -32,12 +32,12 @@
 
 namespace core
 {
-    std::wstring mbrtowc(const std::string& src)
+    static inline std::wstring mbstowcs(const std::string& src)
     {
         std::wstring ret(src.size(), L'\0');
         const char* ptr=src.c_str();
         std::mbstate_t state = std::mbstate_t();
-        const auto len = std::mbsrtowcs(wc.data(), &ptr, ret.size(), &state);
+        const auto len = std::mbsrtowcs(const_cast<wchar_t*>(ret.data()), &ptr, ret.size(), &state);
         if(static_cast<std::size_t>(-1)!=len)
             ret.resize(len);
         return ret;

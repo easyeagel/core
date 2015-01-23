@@ -16,7 +16,10 @@
 //=====================================================================================
 
 
+#include"msvc.hpp"
 #include"error.hpp"
+#include"encode.hpp"
+
 
 #include<algorithm>
 
@@ -26,7 +29,7 @@ namespace core
 std::string ErrorCode::message() const
 {
 #ifdef _MSC_VER
-    return core::to(core::mbrtowc(Base::message()));
+    return WCharConverter::to(core::mbstowcs(Base::message()));
 #else
     return Base::message();
 #endif
