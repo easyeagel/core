@@ -19,7 +19,8 @@
 #pragma once
 
 #include<string>
-#include<utf8.h>
+
+#include"utf8/utf8.h"
 
 namespace core
 {
@@ -125,6 +126,8 @@ namespace details
 
 class WCharConverter: public details::WCharConverter<sizeof(wchar_t)>
 {};
+
+void utf8Enable(std::wios& io);
 
 }
 
