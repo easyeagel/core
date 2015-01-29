@@ -15,5 +15,8 @@ set(jpegSrc
 )
 
 add_library(jpeg STATIC ${jpegSrc})
-set_target_properties(jpeg PROPERTIES COMPILE_FLAGS "-w")
+set_target_properties(jpeg PROPERTIES
+    INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}"
+    COMPILE_FLAGS "-w"
+)
 

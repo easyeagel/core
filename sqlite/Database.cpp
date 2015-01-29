@@ -24,6 +24,17 @@
 namespace SQLite
 {
 
+#ifdef SQLITE_HAS_CODEC
+void Database::setEncryptKey(const std::string& key)
+{
+    const int ret=::sqlite3_key(mpSQLite, key.data(), key.size());
+    if (SQLITE_OK != ret)
+    {
+        std::string strerr = sqlite3_errmsg(mpSQLite);
+        throw SQLite::Exception(strerr);
+    }
+}
+#endif
 
 // Open the provided database UTF-8 filename with SQLITE_OPEN_xxx provided flags.
 Database::Database(const char* apFilename, const int aFlags /*= SQLITE_OPEN_READONLY*/, const char* apVfs /*= NULL*/) :
@@ -127,3 +138,4 @@ void Database::createFunction(const char*   apFuncName,
 
 
 }  // namespace SQLite
+

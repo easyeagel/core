@@ -315,6 +315,10 @@ public:
                               apApp, apFunc, apStep, apFinal, apDestroy);
     }
 
+#ifdef SQLITE_HAS_CODEC
+    void setEncryptKey(const std::string& key);
+#endif
+
 private:
     /// @{ Database must be non-copyable
     Database(const Database&);

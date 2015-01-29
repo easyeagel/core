@@ -110,8 +110,9 @@ elseif(OptAndroid)
 endif()
 target_link_libraries(webp png jpeg zlibstatic ${PlatformLibs})
 set_target_properties(webp PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-  COMPILE_FLAGS "-w -DGMacroCWepbMain=cwebp_main -DGMacroDWebpMain=dwebp_main"
+    INCLUDE_DIRECTORIES "${CoreDir}/webp/src;${CoreDir}/jpeg;${CoreDir}/png;${CMAKE_CONFIGURATION_HEADER_DIR}"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    COMPILE_FLAGS "-w -DGMacroCWepbMain=cwebp_main -DGMacroDWebpMain=dwebp_main"
 )
 
