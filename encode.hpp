@@ -129,5 +129,20 @@ class WCharConverter: public details::WCharConverter<sizeof(wchar_t)>
 
 void utf8Enable(std::wios& io);
 
+static inline std::wstring mbstowcs(const char* src, size_t n)
+{
+	std::wstring ret(n, L'\0');
+	std::mbstate_t state = std::mbstate_t();
+	const auto len = std::mbsrtowcs(const_cast<wchar_t*>(ret.data()), &src, ret.size(), &state);
+	if (static_cast<std::size_t>(-1) != len)
+		ret.resize(len);
+	return std::move(ret);
+}
+
+static inline std::wstring mbstowcs(const std::string& src)
+{
+	return mbstowcs(src.data(), src.size());
+}
+
 }
 
