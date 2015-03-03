@@ -134,5 +134,3 @@ static inline void printAbort(const char* file, int line, const char* msg)
     #define GMacroDebugDoit(CppFun) (void)
 #endif
 
-
-

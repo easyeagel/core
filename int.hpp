@@ -147,7 +147,7 @@ private:
 struct IntHash
 {
     template<typename Object, typename Int>
-    std::size_t operator()(const mr::IntValueT<Object, Int>& val) const
+    std::size_t operator()(const IntValueT<Object, Int>& val) const
     {
         return val.valueGetIf();
     }
