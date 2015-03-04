@@ -107,6 +107,8 @@ class CoreError: public core::details::ECatBase
 
     CoreError()=default;
 public:
+    ~CoreError();
+
     static const CoreError& instance()
     {
         static CoreError gs;

@@ -36,6 +36,13 @@ std::string ErrorCode::message() const
 
 }
 
+CoreError::~CoreError()=default;
+
+std::string CoreError::message(int ) const
+{
+    return std::string("need impl");
+}
+
 }
 
 

@@ -366,8 +366,8 @@ void ServiceT<Object, IOUnit>::acceptStop()
 template<typename Object, typename IOUnit>
 void ServiceT<Object, IOUnit>::connectionProcess()
 {
-    const auto local=stream_.local_endpoint(ecGet());
-    const auto remote=stream_.remote_endpoint(ecGet());
+    //const auto local=stream_.local_endpoint(ecGet());
+    //const auto remote=stream_.remote_endpoint(ecGet());
     if(bad())
     {
         return;

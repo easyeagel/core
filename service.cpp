@@ -20,7 +20,7 @@
 
 #include<core/server.hpp>
 
-namespace mr
+namespace core
 {
 
 Service::Service()

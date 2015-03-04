@@ -26,6 +26,9 @@
 
 #include<atomic>
 #include<memory>
+#include<boost/asio/read.hpp>
+#include<boost/asio/write.hpp>
+#include<boost/asio/ip/tcp.hpp>
 #include<boost/asio/io_service.hpp>
 
 namespace core
@@ -432,6 +435,83 @@ private:
     << (CppSession).sessionMsgGet()\
     << __FILE__  << ':' \
     << __LINE__;
+
+namespace details
+{
+
+struct IOGetDefault
+{
+    static IOService& get()
+    {
+        return IOServer::serviceFetchOne();
+    }
+};
+
+template<typename AsyncStream, typename AsyncAcceptor, typename EndPoint,
+    typename Resolver, typename Base, typename IOGet=IOGetDefault>
+class IOUnitT: public Base
+{
+public:
+    typedef AsyncStream StreamType;
+    typedef AsyncAcceptor AcceptorType;
+    typedef EndPoint EndPointType;
+    typedef Resolver ResolverType;
+
+    IOUnitT(AsyncStream&& strm)
+        :stream_(std::move(strm))
+    {}
+
+    IOUnitT()
+        :stream_(IOGet::get().castGet())
+    {}
+
+
+    AsyncStream& streamGet()
+    {
+        return stream_;
+    }
+
+    const AsyncStream& streamGet() const
+    {
+        return stream_;
+    }
+
+    void streamClose()
+    {
+        stream_.close();
+    }
+
+    const HostAddress& remoteHostGet() const
+    {
+        if(remote_.empty())
+        {
+            const auto& add=remoteAddressGet();
+            const_cast<HostAddress&>(remote_)=add.to_string();
+        }
+        return remote_;
+    }
+
+    const boost::asio::ip::address remoteAddressGet() const
+    {
+        return streamGet().remote_endpoint().address();
+    }
+
+private:
+    HostAddress remote_;
+    AsyncStream stream_;
+};
+
+}
+
+template<typename Base>
+using TCPIOUnit=details::IOUnitT<
+    boost::asio::ip::tcp::socket,
+    boost::asio::ip::tcp::acceptor,
+    boost::asio::ip::tcp::endpoint,
+    boost::asio::ip::tcp::resolver,
+    Base
+>;
+
 
 
 
