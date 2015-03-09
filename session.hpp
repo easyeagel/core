@@ -29,6 +29,7 @@
 #include<boost/asio/read.hpp>
 #include<boost/asio/write.hpp>
 #include<boost/asio/ip/tcp.hpp>
+#include<boost/asio/connect.hpp>
 #include<boost/asio/io_service.hpp>
 
 namespace core
@@ -267,7 +268,6 @@ private:
 };
 
 class CCmdBase;
-class EasyTable;
 class CoroutineContext;
 
 class CSession: public details::SessionBaseT<ErrorBaseT<std::enable_shared_from_this<CSession>>>
@@ -296,10 +296,6 @@ public:
 
     typedef std::function<void()> CallFun;
     virtual void exitCallPush(CallFun&& callIn)    =0;
-    virtual void commandExecute(const CmdPtr& cmd) =0;
-
-    virtual void tableWrite(EasyTable&& ) =0;
-    virtual void tableWrite(CoroutineContext&, EasyTable&& ) =0;
 
     void connect(CoroutineContext& yield, const HostPoint& host)
     {
@@ -355,6 +351,48 @@ public:
 protected:
     IOUnit ioUnit_;
 };
+
+namespace details
+{
+template<typename IOUnit, typename Handle>
+void streamConnectAsync(Handle&& handle , const HostPoint& host, IOUnit& ioUnit)
+{
+    typedef typename IOUnit::ResolverType Resolver;
+    Resolver resolver(ioUnit.streamGet().get_io_service());
+    boost::asio::async_connect(ioUnit.streamGet(),
+        resolver.resolve({host.addressGet().toString(), host.portGet().toString()}),
+        [handle](const boost::system::error_code& ec, typename Resolver::iterator itr)
+        {
+            if(ec)
+                return handle(ec);
+            if(typename Resolver::iterator()==itr)
+                return handle(core::CoreError::ecMake(core::CoreError::eNetConnectError));
+            handle(core::CoreError::ecMake(core::CoreError::eGood));
+        }
+    );
+}
+
+template<typename IOUnit>
+void streamConnectAsync(CoroutineContext& coro, const HostPoint& host, IOUnit& ioUnit)
+{
+    coro.yield(
+        [&coro, host, &ioUnit]()
+        {
+            streamConnectAsync(
+                [&coro](const boost::system::error_code& ec)
+                {
+                    if(ec)
+                        coro.ecSet(ec);
+                    coro.resume();
+                }
+            , host , ioUnit
+            );
+        }
+    );
+}
+
+
+}
 
 template<typename IOUnitType, typename Base=CSession>
 class CSessionT: public Base
