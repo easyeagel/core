@@ -23,6 +23,7 @@
 
 #include<string>
 #include<ostream>
+#include<type_traits>
 
 #include"msvc.hpp"
 #include"operator.hpp"
@@ -238,6 +239,11 @@ public:
     const Value_t& refGet() const
     {
         return value_;
+    }
+
+    typename std::underlying_type<Value_t>::type underGet() const
+    {
+        return static_cast<typename std::underlying_type<Value_t>::type>(value_);
     }
 private:
     Value_t value_;

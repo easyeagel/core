@@ -80,7 +80,8 @@ static inline unsigned constexpr constLength(char const *input)
     return ConstString::length(input);
 }
 
-static inline unsigned stringHash(char const* const input, char const* end)
+template<typename Itr>
+inline unsigned stringHash(Itr input, Itr end)
 {
     unsigned sum=5381u;
     for(--end; end>=input; --end)
