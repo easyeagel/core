@@ -46,7 +46,7 @@ static inline void daemonMsgWrite(const char* msg)
 
 static inline std::string daemonLogName(const char* name)
 {
-    std::string file=".";
+    std::string file="logs";
     file += std::string("/")
         + name
         + "." + nowPathStringForestall()

@@ -38,7 +38,7 @@ endif()
 #===============================================================================================
 add_library(leveldb STATIC ${leveldbSrc})
 set_target_properties(leveldb PROPERTIES
-    INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/libs/leveldb;${CMAKE_SOURCE_DIR}/libs/leveldb/include;${CMAKE_SOURCE_DIR}/libs/snappy"
+    INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/../snappy"
     COMPILE_FLAGS "${ComplierNoWaringFlags}"
     COMPILE_DEFINITIONS "SNAPPY")
 
