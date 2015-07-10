@@ -1,4 +1,4 @@
-#include "JSONMemory.h"
+﻿#include "JSONMemory.h"
 
 #ifdef JSON_MEMORY_MANAGE
     #include "JSONNode.h"

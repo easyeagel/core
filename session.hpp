@@ -1,4 +1,4 @@
-//  Copyright [2014] <lgb (LiuGuangBao)>
+﻿//  Copyright [2014] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  session.hpp
@@ -464,6 +464,11 @@ public:
         ioUnit_.streamClose();
     }
 
+    void streamReset()
+    {
+        ioUnit_.streamReset();
+    }
+
 private:
     IOUnit ioUnit_;
 };
@@ -532,6 +537,11 @@ public:
     const boost::asio::ip::address remoteAddressGet() const
     {
         return streamGet().remote_endpoint().address();
+    }
+
+    void streamReset()
+    {
+        stream_=AsyncStream(IOGet::get().castGet());
     }
 
 private:

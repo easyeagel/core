@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  isValidObject.cpp
  *  TestSuite
  *

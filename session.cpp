@@ -1,4 +1,4 @@
-//  Copyright [2014] <lgb (LiuGuangBao)>
+﻿//  Copyright [2014] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  session.cpp

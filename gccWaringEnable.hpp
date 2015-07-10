@@ -1,4 +1,4 @@
-//  Copyright [2014] <lgb (LiuGuangBao)>
+﻿//  Copyright [2014] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  gccWaringEnable.hpp
@@ -16,7 +16,9 @@
 //=====================================================================================
 
 
+#if !defined(_MSC_VER)
 
 #pragma GCC diagnostic pop
 
+#endif
 

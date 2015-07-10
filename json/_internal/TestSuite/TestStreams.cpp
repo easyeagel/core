@@ -1,4 +1,4 @@
-#include "TestSuite.h"
+﻿#include "TestSuite.h"
 
 #ifdef JSON_STREAM
 unsigned int counter = 0;

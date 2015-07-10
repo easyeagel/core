@@ -1,4 +1,4 @@
-//  Copyright [2014] <lgb (LiuGuangBao)>
+﻿//  Copyright [2014] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  time.hpp
@@ -15,15 +15,15 @@
 //
 //=====================================================================================
 
-
-#ifndef MR_TIME_HPP
-#define MR_TIME_HPP
+#pragma once
 
 #include<ctime>
 
 #include<set>
 #include<list>
+#include<array>
 #include<string>
+#include<bitset>
 #include<boost/asio/steady_timer.hpp>
 #include<boost/date_time/posix_time/posix_time.hpp>
 
@@ -169,7 +169,7 @@ public:
     */
     static uint32_t steadySecondGet()
     {
-        return secondGet()-instance().secondStart_;
+        return static_cast<uint32_t>(secondGet()-instance().secondStart_);
     }
 
     static void start()
@@ -426,7 +426,7 @@ private:
 //-> end{2014-12-12 24:00:00}
 namespace xp
 {
-    struct TimePush;
+    class TimePush;
 }
 
 class TimePattern
@@ -500,5 +500,4 @@ private:
 }
 
 
-#endif //MR_TIME_HPP
 

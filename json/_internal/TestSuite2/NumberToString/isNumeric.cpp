@@ -1,4 +1,4 @@
-#include "isNumeric.h"
+﻿#include "isNumeric.h"
 #include "../../Source/NumberToString.h"
 
 /*

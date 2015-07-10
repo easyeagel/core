@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file    Statement.cpp
  * @ingroup SQLiteCpp
  * @brief   A prepared SQLite Statement is a compiled SQL query ready to be executed, pointing to a row of result.

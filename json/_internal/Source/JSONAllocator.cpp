@@ -1,4 +1,4 @@
-#include "JSONAllocator.h"
+﻿#include "JSONAllocator.h"
 
 #if defined(JSON_MEMORY_CALLBACKS) || defined(JSON_MEMORY_POOL)
 #include "JSONMemory.h"

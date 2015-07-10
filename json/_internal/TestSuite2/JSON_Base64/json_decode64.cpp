@@ -1,4 +1,4 @@
-#include "json_decode64.h"
+﻿#include "json_decode64.h"
 #include "../../Source/JSON_Base64.h"
 
 void testJSON_Base64__json_decode64::testNotBase64(void){

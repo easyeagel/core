@@ -1,4 +1,4 @@
-//  Copyright [2014] <lgb (LiuGuangBao)>
+﻿//  Copyright [2014] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  sessionPool.cpp
@@ -15,9 +15,10 @@
 //
 //=====================================================================================
 
-
+#ifndef WIN32
 #include<sys/time.h>
 #include<sys/resource.h>
+#endif
 
 #include"session.hpp"
 #include"sessionPool.hpp"
@@ -28,6 +29,7 @@ namespace core
 SessionManager::SessionManager()
     :sessionCountLimit_(eDefaultCountLimit)
 {
+#ifndef WIN32
     struct ::rlimit rl={0, 0};
     auto ret=::getrlimit(RLIMIT_NOFILE, &rl);
     assert(ret==0);
@@ -35,6 +37,9 @@ SessionManager::SessionManager()
         return;
     assert(rl.rlim_cur>=1024);
     sessionCountLimit_=rl.rlim_cur-64;
+#else
+    sessionCountLimit_ = 1024;
+#endif
 }
 
 void SessionManager::allClose()

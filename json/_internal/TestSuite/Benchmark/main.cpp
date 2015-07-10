@@ -1,4 +1,4 @@
-/**
+﻿/**
  *
  *  This test suite should get run before releasing a new version of libjson, once all
  *  unit tests have passed.  This asserts that the Options are in the default configuration,

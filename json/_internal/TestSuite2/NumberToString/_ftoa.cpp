@@ -1,4 +1,4 @@
-#include "_ftoa.h"
+﻿#include "_ftoa.h"
 #include "../../Source/NumberToString.h"
 
 

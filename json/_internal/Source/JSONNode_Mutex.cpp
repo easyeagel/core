@@ -1,4 +1,4 @@
-#include "JSONNode.h"
+﻿#include "JSONNode.h"
 #include "JSONGlobals.h"
 
 #ifdef JSON_MUTEX_CALLBACKS

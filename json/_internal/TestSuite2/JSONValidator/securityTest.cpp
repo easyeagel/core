@@ -1,4 +1,4 @@
-#include "securityTest.h"
+﻿#include "securityTest.h"
 #include "Resources/validyMacros.h"
 #include "../../Source/JSONValidator.h"
 

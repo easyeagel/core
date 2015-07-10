@@ -1,4 +1,4 @@
-//  Copyright [2014] <lgb (LiuGuangBao)>
+﻿//  Copyright [2014] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  log.cpp
@@ -16,8 +16,9 @@
 //=====================================================================================
 
 
-#include"log.hpp"
+
 #include"time.hpp"
+#include"log.hpp"
 #include"server.hpp"
 #include"string.hpp"
 
@@ -85,7 +86,7 @@ class BoostLog
 
             io::filtering_ostream out;
             out.push(io::bzip2_compressor());
-            out.push(io::file_sink(outPath.c_str()));
+            out.push(io::file_sink(outPath.string().c_str()));
 
             io::copy(in, out);
 
@@ -197,6 +198,7 @@ void GlobalLogInit::init(const std::string& dir, const std::string& prefix)
 
 SeverityLevel severityFromString(const char* lvl)
 {
+#ifndef _MSC_VER
     switch(constHash(lvl))
     {
         case constHash("trace"):
@@ -214,6 +216,8 @@ SeverityLevel severityFromString(const char* lvl)
         default:
             return SeverityLevel::info;
     }
+#endif
+    return SeverityLevel::info;
 }
 
 void GlobalLogInit::severitySet(SeverityLevel level)

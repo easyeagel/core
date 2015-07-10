@@ -1,4 +1,4 @@
-//  Copyright [2014] <lgb (LiuGuangBao)>
+﻿//  Copyright [2014] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  time.cpp
@@ -41,9 +41,13 @@ std::time_t LocalTime::offset()
     {
         Init() :offset(8*60*60)
         {
-            std::tm tm;
             std::time_t t=0;
+#ifndef _MSC_VER
+            std::tm tm;
             ::gmtime_r(&t, &tm);
+#else
+            std::tm tm= *std::gmtime(&t);
+#endif
             offset=-std::mktime(&tm);
         }
 
@@ -131,8 +135,12 @@ std::string nowString()
 std::string timeString(std::time_t t)
 {
     //2013-11-04_17:34:35
+#ifndef _MSC_VER
     std::tm tm;
     ::localtime_r(&t, &tm);
+#else
+    std::tm tm = *std::localtime(&t);
+#endif
 
     char buf[24];
     std::strftime(buf, sizeof(buf), "%Y-%m-%d_%H:%M:%S", &tm);
@@ -143,9 +151,13 @@ std::string timeString(std::time_t t)
 std::string nowPathString()
 {
     //2013-11-04_17-34-35
-    std::tm tm;
     auto t=secondNow();
+#ifndef _MSC_VER
+    std::tm tm;
     ::localtime_r(&t, &tm);
+#else
+    std::tm tm = *std::localtime(&t);
+#endif
 
     char buf[24];
     std::strftime(buf, sizeof(buf), MacroNowPath, &tm);
@@ -161,9 +173,13 @@ std::string nowStringForestall()
 std::string nowPathStringForestall()
 {
     //2013-11-04_17-34-35
-    std::tm tm;
     auto t=std::time(nullptr);
+#ifndef _MSC_VER
+    std::tm tm;
     ::localtime_r(&t, &tm);
+#else
+    std::tm tm = *std::localtime(&t);
+#endif
 
     char buf[24];
     std::strftime(buf, sizeof(buf), MacroNowPath, &tm);
@@ -342,8 +358,9 @@ using namespace boost::xpressive;
 placeholder<TimePattern> phTimePattern;
 placeholder<std::vector<std::pair<uint32_t, uint32_t>>> phTimeUnitList;
 
-struct TimePush
+class TimePush
 {
+public:
     typedef void result_type;
 
     template<typename Sequence, typename Tag, typename Value>
@@ -483,6 +500,7 @@ void TimePattern::bitCorrect()
 
 void TimePattern::push(const std::string& tag, const std::vector<std::pair<uint32_t, uint32_t>>& pairs)
 {
+#ifndef _MSC_VER
     switch(stringHash(tag.c_str(), tag.c_str()+tag.size()))
     {
         case constHash("year"):
@@ -506,10 +524,12 @@ void TimePattern::push(const std::string& tag, const std::vector<std::pair<uint3
         case constHash("week"):
             return bitSet(pairs, masks_[eWeek]);
     }
+#endif
 }
 
 void TimePattern::push(const std::string& tag, const std::string& time)
 {
+#ifndef _MSC_VER
     switch(stringHash(tag.c_str(), tag.c_str()+tag.size()))
     {
         case constHash("start"):
@@ -523,6 +543,7 @@ void TimePattern::push(const std::string& tag, const std::string& time)
             return;
         }
     }
+#endif
 }
 
 std::time_t TimePattern::nextIn(std::time_t t) const
@@ -747,8 +768,12 @@ std::string TimePattern::toString() const
     auto const timeString=[](std::time_t t) -> std::string
     {
         //2013-11-04_17:34:35
+#ifndef _MSC_VER
         std::tm tm;
         ::gmtime_r(&t, &tm);
+#else
+        std::tm tm = *std::gmtime(&t);
+#endif
 
         char buf[24];
         std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm);

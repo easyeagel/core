@@ -1,4 +1,4 @@
-//  Copyright [2014] <lgb (LiuGuangBao)>
+﻿//  Copyright [2014] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  daemon.cpp
@@ -16,12 +16,13 @@
 //=====================================================================================
 
 
-
-#include<fcntl.h>
-#include<unistd.h>
-#include<sys/wait.h>
-#include<sys/stat.h>
-#include<sys/types.h>
+#if !defined(WIN32)
+	#include<fcntl.h>
+	#include<unistd.h>
+	#include<sys/wait.h>
+	#include<sys/stat.h>
+	#include<sys/types.h>
+#endif
 
 #include<string>
 #include<thread>
@@ -40,8 +41,10 @@ static inline void daemonMsgWrite(const char* msg)
     std::string str=nowStringForestall();
     str += ": ";
     str += msg;
+	#if !defined(WIN32)
     ::write(STDERR_FILENO, str.data(), str.size());
     ::fsync(STDERR_FILENO);
+	#endif
 }
 
 static inline std::string daemonLogName(const char* name)
@@ -58,7 +61,7 @@ static inline std::string daemonLogName(const char* name)
 void Daemon::start(const char* name)
 {
     GMacroUnUsedVar(name);
-#if !defined(DEBUG) && defined(NDEBUG)
+#if !defined(DEBUG) && defined(NDEBUG) && !defined(WIN32)
 
     //把自己变成后台进程
     auto pid=::fork();
@@ -107,6 +110,8 @@ void Daemon::start(const char* name)
 
 void Daemon::watch(int pid)
 {
+    GMacroUnUsedVar(pid);
+#if !defined(DEBUG) && defined(NDEBUG) && !defined(WIN32)
     int status=0;
     ::waitpid(pid, &status, 0);
 
@@ -148,6 +153,7 @@ void Daemon::watch(int pid)
     }
 
     //子进程是非正常退出，再创建子进程
+#endif
 }
 
 

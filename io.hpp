@@ -1,4 +1,4 @@
-//  Copyright [2014] <lgb (LiuGuangBao)>
+﻿//  Copyright [2014] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  ioBase.hpp
@@ -39,7 +39,7 @@ class SoftVersion: public IntValueT<SoftVersion, SoftVersion_t>
 {
     typedef IntValueT<SoftVersion, uint16_t> BaseThis;
 public:
-    using BaseThis::BaseThis;
+    GMacroBaseThis(SoftVersion)
 };
 
 /**
@@ -49,7 +49,7 @@ class HostAddress: public FixedStringT<18, uint8_t>
 {
     typedef FixedStringT<18, uint8_t> BaseThis;
 public:
-    using BaseThis::BaseThis;
+    GMacroBaseThis(HostAddress)
 
     static bool check(const char* str, size_t len);
 
@@ -85,7 +85,7 @@ class HostPort: public IntValueT<HostPort, ProPort_t>
 {
     typedef IntValueT<HostPort, uint32_t> BaseThis;
 public:
-    using BaseThis::BaseThis;
+    GMacroBaseThis(HostPort)
 };
 
 /**

@@ -1,4 +1,4 @@
-#include "JSONDebug.h"
+﻿#include "JSONDebug.h"
 #ifdef JSON_DEBUG
 
 #ifdef JSON_STDERROR

@@ -1,4 +1,4 @@
-#include "TestSuite.h"
+﻿#include "TestSuite.h"
 
 void TestSuite::TestInequality(void){
     UnitTest::SetPrefix("TestInequality.cpp - Inequality");

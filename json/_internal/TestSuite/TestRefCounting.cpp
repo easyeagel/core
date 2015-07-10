@@ -1,4 +1,4 @@
-#include "TestSuite.h"
+﻿#include "TestSuite.h"
 
 void TestSuite::TestReferenceCounting(void){
     UnitTest::SetPrefix("TestRefCounting.cpp - Reference Counting");

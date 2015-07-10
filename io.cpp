@@ -1,4 +1,4 @@
-//  Copyright [2014] <lgb (LiuGuangBao)>
+﻿//  Copyright [2014] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  baseIO.cpp
@@ -18,8 +18,10 @@
 
 #include"io.hpp"
 
+#ifndef WIN32
 #include <ifaddrs.h>
 #include <arpa/inet.h>
+#endif
 
 #include<algorithm>
 
@@ -104,6 +106,7 @@ V valueReserve(V v)
 
 void HostAddress::localAddressGet(LocalAddressCall&& call)
 {
+#ifndef WIN32
     struct ::ifaddrs *ifaddr=nullptr;
     if (::getifaddrs(&ifaddr) == -1)
         return ::freeifaddrs(ifaddr);
@@ -117,6 +120,7 @@ void HostAddress::localAddressGet(LocalAddressCall&& call)
     }
 
     ::freeifaddrs(ifaddr);
+#endif
 }
 
 HostAddress HostAddress::fromUInt32(uint32_t addr)
@@ -124,17 +128,19 @@ HostAddress HostAddress::fromUInt32(uint32_t addr)
     HostAddress ret;
     auto ptr=ret.ptrGet();
     auto endPtr=ptr+maxSizeGet();
-
-    ptr += std::snprintf(ptr, endPtr-ptr, "%u", (addr>>24) & 0xFF);
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif
+    ptr += ::snprintf(ptr, endPtr-ptr, "%u", (addr>>24) & 0xFF);
     *ptr++ = '.';
 
-    ptr += std::snprintf(ptr, endPtr-ptr, "%u", (addr>>16) & 0xFF);
+    ptr += ::snprintf(ptr, endPtr-ptr, "%u", (addr>>16) & 0xFF);
     *ptr++ = '.';
 
-    ptr += std::snprintf(ptr, endPtr-ptr, "%u", (addr>> 8) & 0xFF);
+    ptr += ::snprintf(ptr, endPtr-ptr, "%u", (addr>> 8) & 0xFF);
     *ptr++ = '.';
 
-    ptr += std::snprintf(ptr, endPtr-ptr, "%u", (addr>> 0) & 0xFF);
+    ptr += ::snprintf(ptr, endPtr-ptr, "%u", (addr>> 0) & 0xFF);
     *ptr=0;
 
     ret.sizeSet(ptr-ret.ptrGet());

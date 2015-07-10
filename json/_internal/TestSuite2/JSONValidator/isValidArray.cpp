@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  isValidArray.cpp
  *  TestSuite
  *

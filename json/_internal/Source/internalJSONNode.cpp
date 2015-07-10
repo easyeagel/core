@@ -1,4 +1,4 @@
-#include "internalJSONNode.h"
+﻿#include "internalJSONNode.h"
 #include "NumberToString.h"  //So that I can convert numbers into strings
 #include "JSONNode.h"  //To fill in the foreward declaration
 #include "JSONWorker.h"  //For fetching and parsing and such

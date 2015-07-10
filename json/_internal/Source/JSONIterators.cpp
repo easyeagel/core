@@ -1,4 +1,4 @@
-#include "JSONNode.h"
+﻿#include "JSONNode.h"
 
 #ifdef JSON_ITERATORS
     #ifdef JSON_REF_COUNT

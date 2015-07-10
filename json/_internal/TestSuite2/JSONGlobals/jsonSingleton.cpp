@@ -1,4 +1,4 @@
-#include "jsonSingleton.h"
+﻿#include "jsonSingleton.h"
 #include "../../Source/JSONGlobals.h"
 
 json_global_decl(std::string, WITHVALUE, "myvalue");

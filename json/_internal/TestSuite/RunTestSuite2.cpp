@@ -1,4 +1,4 @@
-#include "RunTestSuite2.h"
+﻿#include "RunTestSuite2.h"
 #include "../TestSuite2/BaseTest.h"
 #include "../TestSuite2/JSON_Base64/json_decode64.h"
 #include "../TestSuite2/JSON_Base64/json_encode64.h"

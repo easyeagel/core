@@ -1,4 +1,4 @@
-#include "_atof.h"
+﻿#include "_atof.h"
 #include "../../Source/NumberToString.h"
 
 #ifdef JSON_SAFE

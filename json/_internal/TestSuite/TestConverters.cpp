@@ -1,4 +1,4 @@
-#include "TestSuite.h"
+﻿#include "TestSuite.h"
 #include "../Source/NumberToString.h"
 #include "../Source/JSONNode.h"
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright (C) 2012 Christoph Husse
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of

@@ -81,6 +81,12 @@ static inline std::string stringExclude(const char* s1, const char* exclude)
     CppClass& operator=(CppClass&& )=default;
 
 
+#ifdef _MSC_VER
+#define GMacroBaseThis(CppClass) template<typename... Args> CppClass(Args&&... args): BaseThis(std::forward<Args&&>(args)...) {}
+#else
+#define GMacroBaseThis(CppClass) using BaseThis::BaseThis;
+#endif
+
 
 //============================================================
 static inline void printAbort(const char* file, int line, const char* msg)

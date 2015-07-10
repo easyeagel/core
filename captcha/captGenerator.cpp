@@ -1,4 +1,4 @@
-/*
+﻿/*
   http://brokestream.com/captcha.html
 
   Copyright (C) 2009 Ivan Tikhonov

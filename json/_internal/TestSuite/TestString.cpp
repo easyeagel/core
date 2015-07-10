@@ -1,4 +1,4 @@
-#include "TestSuite.h"
+﻿#include "TestSuite.h"
 
 #ifdef JSON_STRING_HEADER
     #ifdef JSON_UNICODE

@@ -23,6 +23,7 @@
 #define BOOST_SYSTEM_NO_DEPRECATED
 #include<boost/system/error_code.hpp>
 
+#include"msvc.hpp"
 #include"base.hpp"
 #include"macro.hpp"
 

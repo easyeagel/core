@@ -1,4 +1,4 @@
-#include "json_encode64.h"
+﻿#include "json_encode64.h"
 #include "../../Source/JSON_Base64.h"
 
 /**

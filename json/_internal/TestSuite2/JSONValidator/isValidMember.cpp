@@ -1,4 +1,4 @@
-#include "isValidMember.h"
+﻿#include "isValidMember.h"
 #include "Resources/validyMacros.h"
 #include "../../Source/JSONValidator.h"
 

@@ -1,4 +1,4 @@
-#include "JSONNode.h"
+﻿#include "JSONNode.h"
 #ifdef JSON_WRITE_PRIORITY
 #include "JSONWorker.h"
 #include "JSONGlobals.h"

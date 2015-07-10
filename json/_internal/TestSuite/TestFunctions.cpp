@@ -1,4 +1,4 @@
-#include "TestSuite.h"
+﻿#include "TestSuite.h"
 #include "../Source/JSONNode.h"
 
 void TestSuite::TestFunctions(void){

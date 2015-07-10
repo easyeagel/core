@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  isValidPartialRoot.cpp
  *  TestSuite
  *

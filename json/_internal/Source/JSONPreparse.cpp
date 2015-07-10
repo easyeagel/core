@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  JSONPreparse.cpp
  *  TestSuite
  *

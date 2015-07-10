@@ -1,4 +1,4 @@
-//  Copyright [2015] <lgb (LiuGuangBao)>
+﻿//  Copyright [2015] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  kvStore.hpp

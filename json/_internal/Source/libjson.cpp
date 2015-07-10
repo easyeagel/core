@@ -1,4 +1,4 @@
-/*
+﻿/*
     This is the implementation of the C interface to libjson
     This file may be included in any C++ application, but it will
     be completely ignored if JSON_LIBRARY isn't defined.  The

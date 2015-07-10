@@ -1,4 +1,4 @@
-#include "JSON_ASSERT_SAFE.h"
+﻿#include "JSON_ASSERT_SAFE.h"
 #include "../../Source/JSONDebug.h"
 
 #if defined JSON_DEBUG

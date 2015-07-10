@@ -1,4 +1,4 @@
-#include "isValidNumber.h"
+﻿#include "isValidNumber.h"
 #include "Resources/validyMacros.h"
 #include "../../Source/JSONValidator.h"
 

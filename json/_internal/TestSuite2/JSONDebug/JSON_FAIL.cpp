@@ -1,4 +1,4 @@
-#include "JSON_FAIL.h"
+﻿#include "JSON_FAIL.h"
 #include "../../Source/JSONDebug.h"
 
 #if defined JSON_DEBUG

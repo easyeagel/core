@@ -1,4 +1,4 @@
-#include "TestSuite.h"
+﻿#include "TestSuite.h"
 
 #ifdef JSON_LIBRARY
     void CreateTest(JSONNODE * test);  //suppress warnings that it wasnt defined

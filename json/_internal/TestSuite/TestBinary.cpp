@@ -1,4 +1,4 @@
-#include "TestSuite.h"
+﻿#include "TestSuite.h"
 #include "../Source/JSON_Base64.h"
 
 #if defined(JSON_BINARY) || defined(JSON_EXPOSE_BASE64)

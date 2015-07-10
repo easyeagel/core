@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 /*    You can use different implementations for common STD types by simply
     defining the following macros appropriately before including this file.

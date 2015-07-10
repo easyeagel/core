@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file    Database.cpp
  * @ingroup SQLiteCpp
  * @brief   Management of a SQLite Database Connection.

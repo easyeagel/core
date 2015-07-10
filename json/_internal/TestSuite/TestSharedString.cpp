@@ -1,4 +1,4 @@
-
+﻿
 #include "TestSuite.h"
 #include "../Source/JSONSharedString.h"
 

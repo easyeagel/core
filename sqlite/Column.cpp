@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file    Column.cpp
  * @ingroup SQLiteCpp
  * @brief   Encapsulation of a Column in a row of the result pointed by the prepared SQLite::Statement.

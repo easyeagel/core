@@ -1,4 +1,4 @@
-/*
+﻿/*
     ImgRLE4.cpp - An implementation of the Microsoft RLE compressed 4bpp bitmap format.
     This file is a part of LibRLE.
 

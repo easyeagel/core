@@ -1,4 +1,4 @@
-#include "JSONStream.h"
+﻿#include "JSONStream.h"
 
 #ifdef JSON_STREAM
 #include "JSONWorker.h"

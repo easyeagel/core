@@ -1,4 +1,4 @@
-#include "getLenSize.h"
+﻿#include "getLenSize.h"
 #include "../../Source/NumberToString.h"
 
 

@@ -1,4 +1,4 @@
-#include "_areFloatsEqual.h"
+﻿#include "_areFloatsEqual.h"
 #include "../../Source/NumberToString.h"
 
 
