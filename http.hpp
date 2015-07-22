@@ -19,25 +19,27 @@
 #pragma once
 
 #include<map>
+#include<array>
 #include<memory>
 #include<functional>
 
+#include<core/msvc.hpp>
 #include<core/thread.hpp>
+#include<core/error.hpp>
+#include<core/httpParser.hpp>
 
-#include"error.hpp"
-#include"httpParser.hpp"
-
-namespace ezweb
+namespace core
 {
 
 class HttpParser
 {
 public:
-    typedef std::map<std::string, std::string> Header;
+    typedef std::map<std::string, std::string> HeaderDict;
+    typedef std::map<std::string, std::string> StringDict;
 
     HttpParser(http_parser_type type=HTTP_BOTH);
 
-    const Header& headGet() const
+    const HeaderDict& headGet() const
     {
         return headers_;
     }
@@ -98,6 +100,15 @@ public:
         onBody_=std::move(call);
     }
 
+
+    typedef std::function<int ()> OnHeaderComplete;
+    template<typename Call>
+    void onHeaderComplete(Call&& call)
+    {
+        onHeaderComplete_=std::move(call);
+    }
+
+
     const std::string& hostGet() const
     {
         return host_;
@@ -129,15 +140,19 @@ private:
     std::string url_;
     http_parser_url urls_;
     std::string urlPath_;
+    StringDict urlDict_;
 
     std::string headKey_;
     std::string headValue_;
     std::string host_;
-    std::map<std::string, std::string> headers_;
+    HeaderDict headers_;
 
     OnBody onBody_;
+    OnHeaderComplete onHeaderComplete_;
 };
 
+class HttpIOUnit;
+class CoroutineContext;
 class HttpMessage
 {
 public:
@@ -148,10 +163,8 @@ public:
         return headCache_;
     }
 
-    const std::string& bodyGet() const
-    {
-        return bodyCache_;
-    }
+    typedef std::function<void(CoroutineContext& cc, ErrorCode& ec, HttpIOUnit& io)> BodyWriter;
+    void bodyWrite(CoroutineContext& cc, ErrorCode& ec, HttpIOUnit& io) const;
 
     void commonHeadSet(const std::string& k, const std::string& v)
     {
@@ -166,15 +179,34 @@ public:
     void bodySet(const std::string& s)
     {
         bodyCache_=s;
+        privateHead_["Content-Length"]=std::to_string(bodyCache_.size());
+    }
+
+    void bodySet(const std::string& s, const std::string& type)
+    {
+        bodyCache_=s;
+        privateHead_["Content-Type"]=type;
+        privateHead_["Content-Length"]=std::to_string(bodyCache_.size());
     }
 
     void bodySet(std::string&& s)
     {
         bodyCache_=std::move(s);
+        privateHead_["Content-Length"]=std::to_string(bodyCache_.size());
     }
 
+    void bodySet(std::string&& s, const std::string& type)
+    {
+        bodyCache_=std::move(s);
+        privateHead_["Content-Type"]=type;
+        privateHead_["Content-Length"]=std::to_string(bodyCache_.size());
+    }
 
-protected:
+    const std::string& bodyGet() const
+    {
+        return bodyCache_;
+    }
+
     void reset()
     {
         privateHead_.clear();
@@ -191,6 +223,7 @@ protected:
 
     std::string headCache_;
     std::string bodyCache_;
+    std::function<void(CoroutineContext& cc, ErrorCode& ec, HttpIOUnit& io)> bodyWriter_;
 };
 
 class HttpResponse: public HttpMessage
@@ -200,7 +233,7 @@ public:
     {
         eHttpOk=200,
         eHttpNoContent=204,
-        
+
         eHttpMove=301,
         eHttpFound=302,
 
@@ -250,13 +283,30 @@ private:
 
 typedef std::shared_ptr<HttpResponse> HttpResponseSPtr;
 
-class HttpGetDispatch: public core::SingleInstanceT<HttpGetDispatch>
+class HttpDispatch
 {
-    HttpGetDispatch()=default;
-    friend class core::OnceConstructT<HttpGetDispatch>;
-public: 
-    typedef std::function<HttpResponseSPtr (core::ErrorCode&, const HttpParser&)> GetCall;
-    typedef std::map<std::string, GetCall> PathDict;
+public:
+    HttpDispatch();
+
+    class Dispatcher
+    {
+    public:
+        virtual void headCompleteCall(ErrorCode& ec, const HttpParser& hp) =0;
+        virtual void bodyCall(ErrorCode& ec, const HttpParser& hp, const char* b, size_t nb) =0;
+        virtual HttpResponseSPtr bodyCompleteCall(ErrorCode& ec, const HttpParser& hp) =0;
+
+        virtual bool isKeep() const
+        {
+            return false;
+        }
+
+        virtual ~Dispatcher()
+        {}
+    };
+
+    typedef std::shared_ptr<Dispatcher> DispatcherSPtr;
+    typedef std::function<std::shared_ptr<Dispatcher>(const HttpParser&)> DispatcherCreater;
+    typedef std::map<std::string, DispatcherCreater> PathDict;
 
     template<typename Call>
     void insert(const std::string& url, Call&& call)
@@ -264,14 +314,27 @@ public:
         paths_[url]=std::move(call);
     }
 
-    HttpResponseSPtr dispatch(core::ErrorCode& ec, const HttpParser& hp) const;
+    DispatcherSPtr create(const HttpParser& hp) const;
 
-private:
-    HttpResponseSPtr logicNotFound(const std::string& path=std::string()) const;
-    HttpResponseSPtr redirectMove(const char* path) const;
+    static HttpResponseSPtr logicNotFound(const std::string& path=std::string());
+    static HttpResponseSPtr redirectMove(const char* path);
+    static HttpResponseSPtr httpHomePage(ErrorCode& ec, const HttpParser& hp);
 
-private:
+protected:
     PathDict paths_;
+};
+
+class HttpDispatchDict: public SingleInstanceT<HttpDispatchDict>
+{
+    enum { eDictSize=5 };
+public:
+    HttpDispatch& get(http_method method)
+    {
+        return dict_[method];
+    }
+
+private:
+    std::array<HttpDispatch, eDictSize> dict_;
 };
 
 }

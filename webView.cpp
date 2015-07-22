@@ -16,13 +16,15 @@
 //=====================================================================================
 //
 
-#include"webView.hpp"
-
 #include<string>
+
+#include<core/msvc.hpp>
 #include<core/thread.hpp>
 #include<core/string.hpp>
 
-namespace ezweb
+#include"webView.hpp"
+
+namespace core
 {
 
 const char* HtmlTemplate::pageGet()
@@ -31,7 +33,7 @@ const char* HtmlTemplate::pageGet()
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
-<meta charset="utf8" />
+<meta content="text/html; charset=utf-8" http-equiv="content-type" />
 <style type="text/css">
 #topFixed
 {

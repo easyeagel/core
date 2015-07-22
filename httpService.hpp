@@ -18,11 +18,11 @@
 
 #pragma once
 
+#include<core/macro.hpp>
 #include<core/service.hpp>
+#include<core/httpSession.hpp>
 
-#include"httpSession.hpp"
-
-namespace ezweb
+namespace core
 {
 
 class HttpService: public core::ServiceT<HttpService, HttpIOUnit>
@@ -31,8 +31,8 @@ class HttpService: public core::ServiceT<HttpService, HttpIOUnit>
 
 public:
     typedef HttpSSession SessionType;
+    GMacroBaseThis(HttpService);
 
-    using BaseThis::BaseThis;
 };
 
 }

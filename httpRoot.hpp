@@ -19,10 +19,9 @@
 
 #pragma once
 #include<core/thread.hpp>
+#include<core/http.hpp>
 
-#include"http.hpp"
-
-namespace ezweb
+namespace core
 {
 
 class FileRoot: public core::SingleInstanceT<FileRoot>

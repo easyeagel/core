@@ -19,23 +19,27 @@
 #include<cstring>
 #include<boost/algorithm/string/split.hpp>
 
-#include"httpRoot.hpp"
-#include"http.hpp"
+#include<core/msvc.hpp>
+#include<core/http.hpp>
+#include<core/error.hpp>
+#include<core/httpRoot.hpp>
+#include<core/httpSession.hpp>
 
-namespace ezweb
+namespace core
 {
+
 
 int HttpParser::on_message_begin(http_parser* )
 {
     return 0;
 }
 
-int HttpParser::on_status(http_parser* , const char* , size_t ) 
+int HttpParser::on_status(http_parser* , const char* , size_t )
 {
     return 0;
 }
 
-int HttpParser::on_url(http_parser* hp, const char* at, size_t nb) 
+int HttpParser::on_url(http_parser* hp, const char* at, size_t nb)
 {
     auto& self=get(hp);
     self.url_=std::string(at, nb);
@@ -48,13 +52,13 @@ int HttpParser::on_url(http_parser* hp, const char* at, size_t nb)
     return 0;
 }
 
-int HttpParser::on_header_field(http_parser* hp, const char* at, size_t nb) 
+int HttpParser::on_header_field(http_parser* hp, const char* at, size_t nb)
 {
     get(hp).headKey_=std::string(at, nb);
     return 0;
 }
 
-int HttpParser::on_header_value(http_parser* hp, const char* at, size_t nb) 
+int HttpParser::on_header_value(http_parser* hp, const char* at, size_t nb)
 {
     auto& self=get(hp);
     if(self.headKey_=="Host")
@@ -71,10 +75,12 @@ int HttpParser::on_headers_complete(http_parser* hp)
 {
     auto& self=get(hp);
     self.isHeadComplete_=true;
+    if(self.onHeaderComplete_)
+        return self.onHeaderComplete_();
     return 0;
 }
 
-int HttpParser::on_body(http_parser* hp, const char* b, size_t n) 
+int HttpParser::on_body(http_parser* hp, const char* b, size_t n)
 {
     auto& self=get(hp);
     if(self.onBody_)
@@ -162,6 +168,13 @@ void HttpMessage::headCache()
     headCacheImpl(privateHead_);
 }
 
+void HttpMessage::bodyWrite(CoroutineContext& cc, ErrorCode& ec, HttpIOUnit& io) const
+{
+    if(bodyWriter_)
+        return bodyWriter_(cc, ec, io);
+    io.write(cc, ec, bodyGet());
+}
+
 void HttpResponse::cache()
 {
     headCache_.clear();
@@ -198,56 +211,112 @@ void HttpRequest::cache()
     headCache_.append("\r\n");
 }
 
-HttpResponseSPtr HttpGetDispatch::dispatch(core::ErrorCode& ec, const HttpParser& hp) const
+namespace
 {
-    if(ec.bad())
-        return logicNotFound();
 
-#ifdef NDEBUG
-    //只处理已知域名
-    const char* local="127.0.0.1";
-    if(hp.hostGet()!="www.ezshell.org" && std::strncmp(hp.hostGet().c_str(), local, std::strlen(local))!=0)
-        return redirectMove("http://www.ezshell.org/");
-#endif
-
-    auto path=hp.pathGet();
-    if(path=="/")
-        return redirectMove("/blog");
-
-    for(;;)
+class DefautlHttpDispatcher: public HttpDispatch::Dispatcher
+{
+public:
+    void headCompleteCall(ErrorCode& , const HttpParser& ) final
     {
-        auto const itr = paths_.find(path);
-        if(itr!=paths_.end())
-        {
-            auto ptr=itr->second(ec, hp);
-            if(ptr)
-                return ptr;
-            return logicNotFound(hp.pathGet());
-        }
-
-        auto const pos=path.find_last_of('/');
-        if(pos==std::string::npos || pos==0)
-            return logicNotFound(hp.pathGet());
-
-        path.resize(pos);
     }
+
+    void bodyCall(ErrorCode& ec, const HttpParser& , const char* , size_t ) final
+    {
+        ec=CoreError::ecMake(CoreError::eLogicError);
+    }
+
+    HttpResponseSPtr bodyCompleteCall(ErrorCode& , const HttpParser& hp) final
+    {
+        return HttpDispatch::logicNotFound(hp.pathGet());
+    }
+
+    bool isKeep() const final
+    {
+        return true;
+    }
+};
+
+class HomeHttpDispatcher: public HttpDispatch::Dispatcher
+{
+public:
+    void headCompleteCall(ErrorCode& , const HttpParser& ) final
+    {
+    }
+
+    void bodyCall(ErrorCode& ec, const HttpParser& , const char* , size_t ) final
+    {
+        ec=CoreError::ecMake(CoreError::eLogicError);
+    }
+
+    HttpResponseSPtr bodyCompleteCall(ErrorCode& ec, const HttpParser& hp) final
+    {
+        return HttpDispatch::httpHomePage(ec, hp);
+    }
+};
 
 }
 
-HttpResponseSPtr HttpGetDispatch::logicNotFound(const std::string& path) const
+HttpDispatch::HttpDispatch()
 {
-    auto& fr=FileRoot::instance();
-    auto respones=fr.get(path);
-    if(respones)
-        return respones;
+    insert("/", [this](const HttpParser& )
+        {
+            return std::make_shared<HomeHttpDispatcher>();
+        }
+    );
+}
 
-    respones=std::make_shared<HttpResponse>(HttpResponse::eHttpNotFound);
-    respones->commonHeadSet("Content-Type", "text/html; charset=utf-8");
+HttpResponseSPtr HttpDispatch::httpHomePage(ErrorCode& , const HttpParser& )
+{
+    auto respones=std::make_shared<HttpResponse>(HttpResponse::eHttpOk);
+    respones->commonHeadSet("Content-Type", "text/html;charset=utf-8");
     respones->commonHeadSet("Connection", "Close");
     respones->bodySet(R"HTML(
     <html>
         <head>
+            <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+            <title>爱打印 - iprinter.top - 你的网络打印专家</title>
+        </head>
+        <body>
+            <h1>爱打印</h1>
+            <ul>爱打印是合肥工业大学(翡翠湖校区)学长图文(原名旭涛文印)网络平台：
+                <li>官方手机: 17095791816</li>
+                <li>官方  QQ: </li>
+            </ul>
+        </body>
+    </html>)HTML");
+    respones->cache();
+
+    return respones;
+}
+
+HttpDispatch::DispatcherSPtr HttpDispatch::create(const HttpParser& hp) const
+{
+    auto path=hp.pathGet();
+    for(;;)
+    {
+        auto const itr = paths_.find(path);
+        if(itr!=paths_.end())
+            return itr->second(hp);
+
+        auto const pos=path.find_last_of('/');
+        if(pos==std::string::npos || pos==0)
+            return std::make_shared<DefautlHttpDispatcher>();
+
+        path.resize(pos);
+    }
+}
+
+HttpResponseSPtr HttpDispatch::logicNotFound(const std::string& )
+{
+    auto respones=std::make_shared<HttpResponse>(HttpResponse::eHttpNotFound);
+    respones->commonHeadSet("Content-Type", "text/html;charset=utf-8");
+    respones->commonHeadSet("Connection", "keep-alive");
+    respones->bodySet(R"HTML(
+    <html>
+        <head>
             <meta HTTP-EQUIV="REFRESH" content="3; url=/">
+            <title>HTTP 404</title>
         </head>
         <body>
             <h1>404 - 没有发现</h1>
@@ -259,9 +328,9 @@ HttpResponseSPtr HttpGetDispatch::logicNotFound(const std::string& path) const
     return respones;
 }
 
-HttpResponseSPtr HttpGetDispatch::redirectMove(const char* path) const
+HttpResponseSPtr HttpDispatch::redirectMove(const char* path)
 {
-    auto respones=std::make_shared<HttpResponse>(HttpResponse::eHttpMove);
+    auto respones=std::make_shared<HttpResponse>(HttpResponse::eHttpFound);
     respones->commonHeadSet("Location", path);
     respones->commonHeadSet("Connection", "Close");
     respones->cache();

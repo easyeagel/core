@@ -25,7 +25,7 @@
 #include<vector>
 #include<functional>
 
-namespace ezweb
+namespace core
 {
 
 class HtmlTemplate

@@ -22,6 +22,7 @@
 
 #ifdef _MSC_VER
 
+#pragma execution_character_set("utf-8")
 #define constexpr
 #define alignas(Int)
 
@@ -29,11 +30,6 @@
     #undef noexcept
 #endif
 #define noexcept(Val)
-
-namespace core
-{
-
-}
 
 #endif  // _MSC_VER
 

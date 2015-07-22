@@ -17,10 +17,9 @@
 //
 
 #include<core/sessionPool.hpp>
+#include<core/httpSession.hpp>
 
-#include"httpSession.hpp"
-
-namespace ezweb
+namespace core
 {
 
 
@@ -39,7 +38,7 @@ void HttpSSession::sessionStart()
     coroutine_.start([self, this]()
         {
             loop();
-            auto s = std::move(const_cast<std::shared_ptr<core::SSession>&>(self));
+            auto s = const_cast<std::shared_ptr<core::SSession>&>(self);
             core::MainServer::post([s]()
                 {
                     auto tself=std::move(s);
@@ -54,48 +53,35 @@ void HttpSSession::loop()
 {
     for(;;)
     {
-        read(coroutine_);
-        if(bad())
+        this->read(coroutine_);
+        if(this->bad())
             return;
 
-        httpParser_.parse(buffer_.data(), lastBufferSize_);
+#ifndef NDEBUG
+        std::cout << std::string(this->buffer_.data(), this->lastBufferSize_) << std::endl;
+#endif
 
-        if(httpParser_.bad())
+        this->httpParser_.parse(this->buffer_.data(), this->lastBufferSize_);
+
+        if(this->httpParser_.bad())
             return;
 
-        if(!httpParser_.isMessageComplete())
+        if(!this->httpParser_.isMessageComplete())
             continue;
 
-        switch(httpParser_.methodGet())
+        if(this->dispatch_)
         {
-            case HTTP_GET:
-                httpGet();
-                if(bad())
-                    return;
-                break;
-            default:
+            auto respones=this->dispatch_->bodyCompleteCall(this->ecGet(), this->httpParser_);
+            if(this->bad())
                 return;
+            this->write(coroutine_, *respones);
         }
 
-        if(httpParser_.isKeep() && close_==false)
+        if(this->httpParser_.isKeep() && this->dispatch_->isKeep())
             continue;
 
         return;
     }
-}
-
-void HttpSSession::httpGet()
-{
-    auto& hg=HttpGetDispatch::instance();
-
-    GMacroSessionLog(*this, core::SeverityLevel::info)
-        << "httpGet:" << httpParser_.hostGet() << httpParser_.pathGet();
-
-    auto respones=hg.dispatch(this->ecGet(), httpParser_);
-
-    write(coroutine_, *respones);
-
-    close_=true;
 }
 
 void HttpSSession::sessionShutDown()
@@ -147,6 +133,4 @@ std::string& HttpCSession::urlGet(core::CoroutineContext& cc, const std::string&
 
 
 }
-
-
 

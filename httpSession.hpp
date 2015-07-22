@@ -19,10 +19,9 @@
 #pragma once
 
 #include<core/session.hpp>
+#include<core/http.hpp>
 
-#include"http.hpp"
-
-namespace ezweb
+namespace core
 {
 
 namespace details
@@ -38,40 +37,78 @@ class HttpIOUnit: public core::TCPIOUnit<details::HttpIOUnit>
     typedef core::TCPIOUnit<details::HttpIOUnit> BaseThis;
 public:
     GMacroBaseThis(HttpIOUnit);
-};
 
-template<typename IOUnit, typename Base>
-class HttpSessionBase: public Base
-{
-    typedef Base BaseThis;
-public:
-    const HttpParser& parserGet() const
+    template<typename... Args>
+    void write(CoroutineContext& cc, ErrorCode& ecRet, Args&&... args)
     {
-        return httpParser_;
-    }
-
-protected:
-    GMacroBaseThis(HttpSessionBase);
-
-    void write(core::CoroutineContext& cc, const HttpMessage& hm)
-    {
-        cc.yield([this, &cc, &hm]()
+        std::array<boost::asio::const_buffer, sizeof...(Args)> bufs{boost::asio::buffer(std::forward<Args&&>(args))...};
+        cc.yield([this, &cc, &ecRet, bufs]()
             {
-                std::array<boost::asio::const_buffer, 2> bufs{boost::asio::buffer(hm.headGet()), boost::asio::buffer(hm.bodyGet())};
-                boost::asio::async_write(this->ioUnitGet().streamGet(), bufs,
-                    [this, &cc](const boost::system::error_code& ec, size_t nb)
+                boost::asio::async_write(streamGet(), bufs,
+                    [this, &cc, &ecRet](const boost::system::error_code& ec, size_t nb)
                     {
                         if(ec)
-                            this->ecSet(ec);
-                        lastBufferSize_=nb;
+                            ecRet=ec;
                         cc.resume();
                     }
                 );
             }
         );
     }
+};
 
-    void read(core::CoroutineContext& cc)
+template<typename IOUnit, typename Base>
+class HttpSessionBaseT: public Base
+{
+public:
+    const HttpParser& parserGet() const
+    {
+        return httpParser_;
+    }
+
+    struct Command
+    {
+        static int versionCurrentGet()
+        {
+            return 1;
+        }
+    };
+
+protected:
+    template<typename... Args>
+    HttpSessionBaseT(Args&&... args)
+        :Base(std::forward<Args&&>(args)...)
+    {
+        this->httpParser_.onHeaderComplete([this]()
+            {
+                return headComplete();
+            }
+        );
+
+        this->httpParser_.onBody([this](const char* b, size_t nb)
+            {
+                assert(dispatch_);
+                if(!dispatch_)
+                    return 2;
+
+                dispatch_->bodyCall(this->ecGet(), httpParser_, b, nb);
+                if(this->bad())
+                    return 2;
+                return 0;
+            }
+        );
+    }
+
+    void write(CoroutineContext& cc, const HttpMessage& hm)
+    {
+        auto& io=this->ioUnitGet();
+        io.write(cc, this->ecGet(), hm.headGet());
+        if(this->bad())
+            return;
+        hm.bodyWrite(cc, this->ecGet(), io);
+    }
+
+    void read(CoroutineContext& cc)
     {
         constexpr size_t totalSize=8*1024;
         if(buffer_.size()<totalSize)
@@ -93,16 +130,46 @@ protected:
         );
     }
 
+    int headComplete()
+    {
+        const auto m=httpParser_.methodGet();
+        switch(m)
+        {
+            case HTTP_GET:
+            case HTTP_POST:
+                return headMethod(HttpDispatchDict::instance().get(m));
+            default:
+                return 2;
+        }
+    }
+private:
+    int headMethod(HttpDispatch& hg)
+    {
+        GMacroSessionLog(*this, SeverityLevel::info)
+            << "httpMethod:" << this->httpParser_.hostGet() << this->httpParser_.pathGet();
+
+        dispatch_=hg.create(this->httpParser_);
+        if(!dispatch_)
+            return 1;
+
+        dispatch_->headCompleteCall(this->ecGet(), httpParser_);
+        if(this->bad())
+            return 2;
+
+        return 0;
+    }
+
 protected:
     HttpParser httpParser_;
+    HttpDispatch::DispatcherSPtr dispatch_;
 
     std::vector<char> buffer_;
     size_t lastBufferSize_=0;
 };
 
-class HttpSSession: public HttpSessionBase<HttpIOUnit, core::SSessionT<HttpIOUnit>>
+class HttpSSession: public HttpSessionBaseT<HttpIOUnit, core::SSessionT<HttpIOUnit>>
 {
-    typedef HttpSessionBase<HttpIOUnit, core::SSessionT<HttpIOUnit>> BaseThis;
+    typedef HttpSessionBaseT<HttpIOUnit, core::SSessionT<HttpIOUnit>> BaseThis;
     typedef HttpIOUnit::StreamType AsyncStream;
 public:
     HttpSSession(AsyncStream&& hp);
@@ -117,16 +184,14 @@ public:
 private:
     void loop();
 
-    void httpGet();
-
 private:
     bool close_=false;
     core::CoroutineContext coroutine_;
 };
 
-class HttpCSession: public HttpSessionBase<HttpIOUnit, core::CSessionT<HttpIOUnit>>
+class HttpCSession: public HttpSessionBaseT<HttpIOUnit, core::CSessionT<HttpIOUnit>>
 {
-    typedef HttpSessionBase<HttpIOUnit, core::CSessionT<HttpIOUnit>> BaseThis;
+    typedef HttpSessionBaseT<HttpIOUnit, core::CSessionT<HttpIOUnit>> BaseThis;
     typedef HttpIOUnit::StreamType AsyncStream;
 public:
     HttpCSession();

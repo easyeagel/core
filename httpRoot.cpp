@@ -20,9 +20,9 @@
 #include<boost/filesystem/fstream.hpp>
 #include<boost/algorithm/string/predicate.hpp>
 
-#include"httpRoot.hpp"
+#include<core/httpRoot.hpp>
 
-namespace ezweb
+namespace core
 {
 
 namespace bf=boost::filesystem;
@@ -70,7 +70,7 @@ HttpResponseSPtr FileRoot::get(const std::string& httpPath) const
     ret->commonHeadSet("Content-Type", checked->type);
     ret->commonHeadSet("Connection", "Close");
 
-    std::string body(size, '\0');
+    std::string body(static_cast<size_t>(size), '\0');
     stm.read(const_cast<char*>(body.data()), body.size());
     ret->bodySet(std::move(body));
     ret->cache();

@@ -124,6 +124,7 @@ public:
         eBadStart=64,
         eTimerStopping, //定时器停止中
         eNetConnectError,
+        eLogicError,
 
         eEnumCount
     };
