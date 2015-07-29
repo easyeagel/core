@@ -17,7 +17,7 @@
 //
 
 #include<core/sessionPool.hpp>
-#include<core/httpSession.hpp>
+#include<core/http/httpSession.hpp>
 
 namespace core
 {
@@ -38,11 +38,17 @@ void HttpSSession::sessionStart()
     coroutine_.start([self, this]()
         {
             loop();
-            auto s = const_cast<std::shared_ptr<core::SSession>&>(self);
-            core::MainServer::post([s]()
+
+            //让当前会话安全的结束
+            auto s = std::move(const_cast<std::shared_ptr<core::SSession>&>(self));
+            ioserviceGet().post([s]
                 {
-                    auto tself=std::move(s);
-                    tself->sessionShutDown();
+                    core::MainServer::post([s]()
+                        {
+                            auto tself=std::move(s);
+                            tself->sessionShutDown();
+                        }
+                    );
                 }
             );
         }

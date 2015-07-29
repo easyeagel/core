@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <core/httpParser.hpp>
+#include <core/http/httpParser.hpp>
 #include <assert.h>
 #include <stddef.h>
 #include <ctype.h>

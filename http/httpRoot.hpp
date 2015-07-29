@@ -18,30 +18,27 @@
 
 
 #pragma once
+#include<boost/filesystem.hpp>
+
 #include<core/thread.hpp>
-#include<core/http.hpp>
+#include<core/http/http.hpp>
 
 namespace core
 {
 
 class FileRoot: public core::SingleInstanceT<FileRoot>
 {
-    FileRoot()=default;
+    FileRoot();
     friend class core::OnceConstructT<FileRoot>;
 
     //最大不超过2M
     enum {eSizeLimited=1024*1024*2};
 public:
-    HttpResponseSPtr get(const std::string& ) const;
+    void rootPathSet(const boost::filesystem::path& );
+    HttpResponseSPtr get(std::string path) const;
 
 private:
-    static const char* rootGet()
-    {
-        return "root";
-    }
-
-    const char* typeCheck() const;
-
+    boost::filesystem::path rootPath_;
 };
 
 }

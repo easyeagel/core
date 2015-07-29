@@ -16,11 +16,12 @@
 //=====================================================================================
 //
 
+#include<cassert>
 #include<boost/filesystem.hpp>
 #include<boost/filesystem/fstream.hpp>
 #include<boost/algorithm/string/predicate.hpp>
 
-#include<core/httpRoot.hpp>
+#include<core/http/httpRoot.hpp>
 
 namespace core
 {
@@ -39,8 +40,28 @@ static ExternInfo allowedExterns[]=
     {".txt" , "text/plain; charset=utf-8"}
 };
 
-HttpResponseSPtr FileRoot::get(const std::string& httpPath) const
+FileRoot::FileRoot()
+    :rootPath_(bf::current_path()/bf::path("/"))
 {
+    assert(rootPath_.is_absolute());
+    assert(boost::algorithm::ends_with(rootPath_.generic_wstring(), std::wstring(L"/")));
+}
+
+void FileRoot::rootPathSet(const boost::filesystem::path& path)
+{
+    rootPath_=path;
+    assert(rootPath_.is_absolute()
+        && boost::algorithm::ends_with(rootPath_.generic_wstring(), bf::path("/").generic_wstring()));
+}
+
+HttpResponseSPtr FileRoot::get(std::string httpPath) const
+{
+    if(httpPath.empty())
+        return nullptr;
+
+    if(httpPath.back()=='/')
+        httpPath += "index.html";
+
     const ExternInfo* checked=nullptr;
     for(auto& ext: allowedExterns)
     {
@@ -54,9 +75,14 @@ HttpResponseSPtr FileRoot::get(const std::string& httpPath) const
     if(checked==nullptr)
         return nullptr;
 
-    bf::path path(rootGet()+httpPath);
-    if(bf::is_regular_file(path)==false)
+    boost::system::error_code ec;
+    bf::path path=bf::canonical(rootPath_/httpPath, ec);
+    if(ec
+        || false==boost::algorithm::starts_with(path.generic_wstring(), rootPath_.generic_wstring())
+        || false==bf::is_regular_file(path))
+    {
         return nullptr;
+    }
 
     auto const size=bf::file_size(path);
     if(size>eSizeLimited)
@@ -76,11 +102,6 @@ HttpResponseSPtr FileRoot::get(const std::string& httpPath) const
     ret->cache();
 
     return ret;
-}
-
-const char* FileRoot::typeCheck() const
-{
-    return "text/html; charset=utf-8";
 }
 
 }

@@ -20,10 +20,10 @@
 #include<boost/algorithm/string/split.hpp>
 
 #include<core/msvc.hpp>
-#include<core/http.hpp>
 #include<core/error.hpp>
-#include<core/httpRoot.hpp>
-#include<core/httpSession.hpp>
+#include<core/http/http.hpp>
+#include<core/http/httpRoot.hpp>
+#include<core/http/httpSession.hpp>
 
 namespace core
 {
@@ -228,6 +228,15 @@ public:
 
     HttpResponseSPtr bodyCompleteCall(ErrorCode& , const HttpParser& hp) final
     {
+        if(hp.methodGet()==HTTP_GET)
+        {
+            //首先在FileRoot内找，否则就不存在
+            auto& ft=FileRoot::instance();
+            auto ret=ft.get(hp.pathGet());
+            if(ret)
+                return ret;
+        }
+
         return HttpDispatch::logicNotFound(hp.pathGet());
     }
 
@@ -246,11 +255,19 @@ public:
 
     void bodyCall(ErrorCode& ec, const HttpParser& , const char* , size_t ) final
     {
-        ec=CoreError::ecMake(CoreError::eLogicError);
     }
 
     HttpResponseSPtr bodyCompleteCall(ErrorCode& ec, const HttpParser& hp) final
     {
+        if(hp.methodGet()==HTTP_GET)
+        {
+            //首先在FileRoot内找，否则就不存在
+            auto& ft=FileRoot::instance();
+            auto ret=ft.get(hp.pathGet());
+            if(ret)
+                return ret;
+        }
+
         return HttpDispatch::httpHomePage(ec, hp);
     }
 };
@@ -275,13 +292,11 @@ HttpResponseSPtr HttpDispatch::httpHomePage(ErrorCode& , const HttpParser& )
     <html>
         <head>
             <meta content="text/html; charset=utf-8" http-equiv="content-type" />
-            <title>爱打印 - iprinter.top - 你的网络打印专家</title>
+            <title>coreHttp 已经工作</title>
         </head>
         <body>
-            <h1>爱打印</h1>
-            <ul>爱打印是合肥工业大学(翡翠湖校区)学长图文(原名旭涛文印)网络平台：
-                <li>官方手机: 17095791816</li>
-                <li>官方  QQ: </li>
+            <h1>coreHttp 已经工作</h1>
+            <p>看到本页说明你的 coreHttp 已经工作，请设置它，并让它指向你的内容。</p>
             </ul>
         </body>
     </html>)HTML");

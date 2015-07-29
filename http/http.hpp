@@ -26,7 +26,7 @@
 #include<core/msvc.hpp>
 #include<core/thread.hpp>
 #include<core/error.hpp>
-#include<core/httpParser.hpp>
+#include<core/http/httpParser.hpp>
 
 namespace core
 {
