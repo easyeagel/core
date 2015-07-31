@@ -25,6 +25,7 @@
 namespace core
 {
 
+class HttpParser;
 class MutilpartData
 {
 public:
@@ -75,6 +76,8 @@ public:
     {
         return pstatus_==ePStatusComplete;
     }
+
+    static std::string headCheck(ErrorCode& ecRet, const HttpParser& hp);
 
 private:
     void headParse();

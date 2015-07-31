@@ -20,6 +20,7 @@
 #include<boost/algorithm/string/trim.hpp>
 #include<boost/algorithm/string/split.hpp>
 
+#include<core/http/http.hpp>
 #include<core/http/mutilpart.hpp>
 
 namespace core
@@ -276,6 +277,27 @@ void MutilpartData::kvCheck(std::string& key, std::string& val)
     } else if(key=="name") {
         trait_.name=val;
     }
+}
+
+std::string MutilpartData::headCheck(ErrorCode& ecRet, const HttpParser& hp)
+{
+    const auto& h=hp.headGet();
+    auto itr=h.find("Content-Type");
+    if(itr==h.end())
+    {
+        ecRet=CoreError::ecMake(CoreError::eNetProtocolError, "http content-type error");
+        return std::string();
+    }
+
+    const auto& type=itr->second;
+    auto const pos=type.find("boundary=");
+    if(pos==std::string::npos)
+    {
+        ecRet=CoreError::ecMake(CoreError::eNetProtocolError, "http content-type error");
+        return std::string();
+    }
+
+    return type.substr(pos+9);
 }
 
 }

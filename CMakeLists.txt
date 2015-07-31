@@ -19,6 +19,8 @@ set(coreSrc
     http/webView.hpp
     http/mutilpart.cpp
     http/mutilpart.hpp
+    http/file.cpp
+    http/file.hpp
 )
 
 add_library(core STATIC ${coreSrc})

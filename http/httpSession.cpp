@@ -64,7 +64,7 @@ void HttpSSession::loop()
             return;
 
 #ifndef NDEBUG
-        std::cout << std::string(this->buffer_.data(), this->lastBufferSize_) << std::endl;
+        //std::cout << std::string(this->buffer_.data(), this->lastBufferSize_) << std::endl;
 #endif
 
         this->httpParser_.parse(this->buffer_.data(), this->lastBufferSize_);
@@ -78,8 +78,9 @@ void HttpSSession::loop()
         if(this->dispatch_)
         {
             auto respones=this->dispatch_->bodyCompleteCall(this->ecGet(), this->httpParser_);
-            if(this->bad())
+            if(this->bad() || !respones)
                 return;
+
             this->write(coroutine_, *respones);
         }
 
