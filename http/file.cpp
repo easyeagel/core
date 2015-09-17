@@ -1,4 +1,4 @@
-//  Copyright [2015] <lgb (LiuGuangBao)>
+﻿//  Copyright [2015] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  file.cpp
@@ -17,6 +17,9 @@
 //
 
 #include<core/http/file.hpp>
+#ifdef _MSC_VER
+
+#endif
 
 namespace core
 {
@@ -68,7 +71,7 @@ SimpleFileDispatcher::SimpleFileDispatcher(const boost::filesystem::path& dir)
     fileDest_.streamOpenSet([this](const MutilpartData::PartTrait& , HttpFile::FileStream& stream)
         {
             char name[256];
-            std::snprintf(name, sizeof(name), "iptop-%03u.pdf", fileIndex_++);
+            std::sprintf(name, "iptop-%03u.pdf", fileIndex_++);
             boost::filesystem::path path=dir_/name;
             stream.open(path);
         }

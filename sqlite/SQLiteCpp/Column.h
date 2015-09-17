@@ -56,9 +56,9 @@ public:
      * @param[in] aStmtPtr  Shared pointer to the prepared SQLite Statement Object.
      * @param[in] aIndex    Index of the column in the row of result
      */
-    Column(Statement::Ptr& aStmtPtr, int aIndex)    noexcept; // nothrow
+    Column(Statement::Ptr& aStmtPtr, int aIndex);
     /// @brief Simple destructor
-    virtual ~Column()                               noexcept; // nothrow
+    virtual ~Column();
 
     // default copy constructor and assignment operator are perfectly suited :
     // they copy the Statement::Ptr which in turn increments the reference counter.
@@ -66,7 +66,7 @@ public:
     /**
      * @brief Return a pointer to the named assigned to a result column (potentially aliased)
      */
-    const char*     getName() const noexcept; // nothrow
+    const char*     getName() const;
 
     #ifdef SQLITE_ENABLE_COLUMN_METADATA
     /**
@@ -76,29 +76,29 @@ public:
      * - when building the SQLite library itself (which is the case for the Debian libsqlite3 binary for instance),
      * - and also when compiling this wrapper.
      */
-    const char*     getOriginName() const noexcept; // nothrow
+    const char*     getOriginName() const;
 #endif
 
     /// @brief Return the integer value of the column.
-    int             getInt() const noexcept; // nothrow
+    int             getInt() const;
     /// @brief Return the 64bits integer value of the column.
-    sqlite3_int64   getInt64() const noexcept; // nothrow
+    sqlite3_int64   getInt64() const;
     /// @brief Return the double (64bits float) value of the column.
-    double          getDouble() const noexcept; // nothrow
+    double          getDouble() const;
     /**
      * @brief Return a pointer to the text value (NULL terminated string) of the column.
      *
      * @warning The value pointed at is only valid while the statement is valid (ie. not finalized),
      *          thus you must copy it before using it beyond its scope (to a std::string for instance).
      */
-    const char*     getText(const char* apDefaultValue = "") const noexcept; // nothrow
+    const char*     getText(const char* apDefaultValue = "") const;
     /**
      * @brief Return a pointer to the binary blob value of the column.
      *
      * @warning The value pointed at is only valid while the statement is valid (ie. not finalized),
      *          thus you must copy it before using it beyond its scope (to a std::string for instance).
      */
-    const void*     getBlob() const noexcept; // nothrow
+    const void*     getBlob() const;
 
     /**
      * @brief Return the type of the value of the column
@@ -108,30 +108,30 @@ public:
      * @warning After a type conversion (by a call to a getXxx on a Column of a Yyy type),
      *          the value returned by sqlite3_column_type() is undefined.
      */
-    int getType() const noexcept; // nothrow
+    int getType() const;
 
     /// @brief Test if the column is an integer type value (meaningful only before any conversion)
-    inline bool isInteger() const noexcept // nothrow
+    inline bool isInteger() const
     {
         return (SQLITE_INTEGER == getType());
     }
     /// @brief Test if the column is a floating point type value (meaningful only before any conversion)
-    inline bool isFloat() const noexcept // nothrow
+    inline bool isFloat() const
     {
         return (SQLITE_FLOAT == getType());
     }
     /// @brief Test if the column is a text type value (meaningful only before any conversion)
-    inline bool isText() const noexcept // nothrow
+    inline bool isText() const
     {
         return (SQLITE_TEXT == getType());
     }
     /// @brief Test if the column is a binary blob type value (meaningful only before any conversion)
-    inline bool isBlob() const noexcept // nothrow
+    inline bool isBlob() const
     {
         return (SQLITE_BLOB == getType());
     }
     /// @brief Test if the column is NULL (meaningful only before any conversion)
-    inline bool isNull() const noexcept // nothrow
+    inline bool isNull() const
     {
         return (SQLITE_NULL == getType());
     }
@@ -145,10 +145,10 @@ public:
      * - size in bytes of the binary blob returned by getBlob()
      * - 0 for a NULL value
      */
-    int getBytes() const noexcept;
+    int getBytes() const;
 
     /// @brief Alias returning the number of bytes used by the text (or blob) value of the column
-    inline int size() const noexcept
+    inline int size() const
     {
         return getBytes ();
     }

@@ -69,7 +69,7 @@ public:
     /**
      * @brief Finalize and unregister the SQL query from the SQLite Database Connection.
      */
-    virtual ~Statement() noexcept; // nothrow
+    virtual ~Statement();
 
     /**
      * @brief Reset the statement to make it ready for a new execution.
@@ -348,7 +348,7 @@ public:
         // Copy constructor increments the ref counter
         Ptr(const Ptr& aPtr);
         // Decrement the ref counter and finalize the sqlite3_stmt when it reaches 0
-        ~Ptr() noexcept; // nothrow (no virtual destructor needed here)
+        ~Ptr(); // nothrow (no virtual destructor needed here)
 
         /// @brief Inline cast operator returning the pointer to SQLite Database Connection Handle
         inline operator sqlite3*() const

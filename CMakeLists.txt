@@ -36,12 +36,9 @@ if(OptWindows)
     set(dsub "-vc120-mt-sgd-1_58")
     set(rsub "-vc120-mt-s-1_58")
 
-    target_link_libraries(core debug uafxcwd optimized uafxcw)
-    target_link_libraries(core debug libcpmtd optimized libcpmt)
     foreach(file ${BoostLibs})
         target_link_libraries(core debug lib${file}${dsub} optimized lib${file}${rsub})
     endforeach()
-
 elseif(OptLinux)
     set(sysLibs crypto bzip2 z m)
     target_link_libraries(core ${refLibs} ${BoostLibs} ${sysLibs} pthread dl)

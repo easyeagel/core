@@ -87,7 +87,7 @@ public:
      *
      * @warning assert in case of error
      */
-    virtual ~Database() noexcept; // nothrow
+    virtual ~Database(); // nothrow
 
     /**
      * @brief Shortcut to execute one or multiple statements without results.
@@ -211,7 +211,7 @@ public:
      *
      * @param[in] aTimeoutMs    Amount of milliseconds to wait before returning SQLITE_BUSY
      */
-    inline int setBusyTimeout(int aTimeoutMs) noexcept // nothrow
+    inline int setBusyTimeout(int aTimeoutMs)
     {
         return sqlite3_busy_timeout(mpSQLite, aTimeoutMs);
     }
@@ -224,7 +224,7 @@ public:
      *
      * @return Rowid of the most recent successful INSERT into the database, or 0 if there was none.
      */
-    inline sqlite3_int64 getLastInsertRowid() const noexcept // nothrow
+    inline sqlite3_int64 getLastInsertRowid() const
     {
         return sqlite3_last_insert_rowid(mpSQLite);
     }
@@ -234,7 +234,7 @@ public:
      *
      * @return Total number of rows modified since connection to the database. DROP tables does not count.
      */
-    inline int getTotalChanges() const noexcept // nothrow
+    inline int getTotalChanges() const
     {
         return sqlite3_total_changes(mpSQLite);
     }
@@ -242,7 +242,7 @@ public:
     /**
      * @brief Return the filename used to open the database
      */
-    inline const std::string& getFilename() const noexcept // nothrow
+    inline const std::string& getFilename() const
     {
         return mFilename;
     }
@@ -250,7 +250,7 @@ public:
     /**
      * @brief Return UTF-8 encoded English language explanation of the most recent error.
      */
-    inline const char* errmsg() const noexcept // nothrow
+    inline const char* errmsg() const
     {
         return sqlite3_errmsg(mpSQLite);
     }
