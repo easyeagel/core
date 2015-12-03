@@ -16,9 +16,11 @@
 //=====================================================================================
 
 
+#include<boost/utility/in_place_factory.hpp> 
+#include<boost/algorithm/string/predicate.hpp>
+
 #include"server.hpp"
 
-#include<boost/algorithm/string/predicate.hpp>
 
 namespace core
 {

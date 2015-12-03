@@ -204,7 +204,7 @@ std::map<std::string, WebView::ReplaceCall> WebView::replaceDict_=
     {"topRight",
         [](const Unit& u, std::string& ret) { ret += u.topRight; } },
     {"topTail",
-        [](const Unit& u, std::string& ret) { ret += "<a href=\"/\">易壳网</a> - ezshell.org"; } },
+        [](const Unit& , std::string& ret) { ret += "<a href=\"/\">易壳网</a> - ezshell.org"; } },
     {"topHead",
         [](const Unit&  , std::string&    ) { } },
 };

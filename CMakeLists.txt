@@ -33,8 +33,8 @@ set(BoostLibs
 
 if(OptWindows)
     set(BoostLibs ${BoostLibs} boost_bzip2 boost_zlib)
-    set(dsub "-vc120-mt-sgd-1_58")
-    set(rsub "-vc120-mt-s-1_58")
+    set(dsub "-vc140-mt-sgd-1_59")
+    set(rsub "-vc140-mt-s-1_59")
 
     foreach(file ${BoostLibs})
         target_link_libraries(core debug lib${file}${dsub} optimized lib${file}${rsub})

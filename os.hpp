@@ -1,12 +1,12 @@
-﻿//  Copyright [2014] <lgb (LiuGuangBao)>
+//  Copyright [2015] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
-//      Filename:  msvc.hpp
+//      Filename:  os.hpp
 //
-//   Description:  MSVC 一些基本配制
+//   Description:  系统相关代码
 //
 //       Version:  1.0
-//       Created:  2014年11月27日 09时50分30秒
+//       Created:  2015年12月03日 17时56分53秒
 //      Revision:  none
 //      Compiler:  gcc
 //
@@ -18,11 +18,16 @@
 
 #pragma once
 
-#include<string>
+namespace core
+{
 
-#ifdef _MSC_VER
+static inline std::wstring getProgramDir()
+{
+#ifdef GMacroWindows
+    wchar_t chpath[MAX_PATH];  
+    GetModuleFileNameW(NULL,(LPSTR)chpath,sizeof(chpath));
+#endif
+}
 
-#pragma execution_character_set("utf-8")
-
-#endif  // _MSC_VER
+}
 

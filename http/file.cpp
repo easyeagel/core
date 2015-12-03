@@ -88,7 +88,7 @@ void SimpleFileDispatcher::bodyCall(ErrorCode& ec, const HttpParser& hp, const c
     fileDest_.mutipartBody(ec, hp, reinterpret_cast<const Byte*>(bt), nb);
 }
 
-HttpResponseSPtr SimpleFileDispatcher::bodyCompleteCall(ErrorCode& ec, const HttpParser& hp)
+HttpResponseSPtr SimpleFileDispatcher::bodyCompleteCall(ErrorCode& , const HttpParser& )
 {
     auto respones=std::make_shared<HttpResponse>(HttpResponse::eHttpOk);
     respones->commonHeadSet("Content-Type", "application/json;charset=utf-8");

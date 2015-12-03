@@ -253,7 +253,7 @@ public:
     {
     }
 
-    void bodyCall(ErrorCode& ec, const HttpParser& , const char* , size_t ) final
+    void bodyCall(ErrorCode& , const HttpParser& , const char* , size_t ) final
     {
     }
 

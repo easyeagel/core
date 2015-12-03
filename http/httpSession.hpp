@@ -36,7 +36,7 @@ class HttpIOUnit: public core::TCPIOUnit<details::HttpIOUnit>
 {
     typedef core::TCPIOUnit<details::HttpIOUnit> BaseThis;
 public:
-    GMacroBaseThis(HttpIOUnit);
+    GMacroBaseThis(HttpIOUnit)
 
     template<typename... Args>
     void write(CoroutineContext& cc, ErrorCode& ecRet, Args&&... args)
@@ -45,7 +45,7 @@ public:
         cc.yield([this, &cc, &ecRet, bufs]()
             {
                 boost::asio::async_write(streamGet(), bufs,
-                    [this, &cc, &ecRet](const boost::system::error_code& ec, size_t nb)
+                    [this, &cc, &ecRet](const boost::system::error_code& ec, size_t )
                     {
                         if(ec)
                             ecRet=ec;
