@@ -1,4 +1,4 @@
-//  Copyright [2015] <lgb (LiuGuangBao)>
+﻿//  Copyright [2015] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  os.hpp
@@ -17,16 +17,23 @@
 //
 
 #pragma once
+#ifdef GMacroWindows
+#include<windows.h>
+#endif
+#include<boost/filesystem.hpp>
 
 namespace core
 {
 
-static inline std::wstring getProgramDir()
+static inline boost::filesystem::path getProgramPath()
 {
+    boost::filesystem::path ret;
 #ifdef GMacroWindows
-    wchar_t chpath[MAX_PATH];  
-    GetModuleFileNameW(NULL,(LPSTR)chpath,sizeof(chpath));
+    wchar_t path[1024];  
+    ::GetModuleFileNameW(NULL, path, sizeof(path));
+    ret=path;
 #endif
+    return ret;
 }
 
 }
