@@ -32,6 +32,10 @@
 #include"typedef.hpp"
 #include"operator.hpp"
 
+#ifdef min
+    #undef min
+#endif
+
 namespace core
 {
 

@@ -23,6 +23,13 @@
 #ifdef _MSC_VER
 
 #pragma execution_character_set("utf-8")
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
 
 #endif  // _MSC_VER
 

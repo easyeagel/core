@@ -126,6 +126,7 @@ public:
         eNetConnectError,
         eLogicError,
         eNetProtocolError,
+        eObjectNotFound,
 
         eEnumCount
     };

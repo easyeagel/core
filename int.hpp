@@ -22,8 +22,8 @@
 #include<cstdint>
 
 #include<string>
+#include<sstream>
 #include<ostream>
-#include<type_traits>
 
 #include"msvc.hpp"
 #include"operator.hpp"
@@ -32,251 +32,6 @@ namespace core
 {
 
 struct IntHash;
-
-template<typename Object, typename Int>
-class alignas(Int) IntValueT: public TotalOrderT<Object>
-{
-    static const Int eInvalid=~static_cast<Int>(0);
-public:
-    typedef Int Value_t;
-
-    typedef IntHash Hash;
-
-    IntValueT()
-        :value_(eInvalid)
-    {
-        static_assert(sizeof(Object)==sizeof(Int), "alignas error");
-    }
-
-    IntValueT(Value_t v)
-        :value_(v)
-    {
-    }
-
-    static bool valid(Value_t id)
-    {
-        return id!=eInvalid;
-    }
-
-    bool valid() const
-    {
-        return value_!=eInvalid;
-    }
-
-    bool invalid() const
-    {
-        return value_==eInvalid;
-    }
-
-    bool empty() const
-    {
-        return value_==eInvalid;
-    }
-
-    bool operator<(const Object& mid) const
-    {
-        assert(!empty() && !mid.empty());
-        return value_<mid.value_;
-    }
-
-    bool operator==(const Object& mid) const
-    {
-        return value_==mid.value_;
-    }
-
-    Value_t valueGet() const
-    {
-        assert(!empty());
-        return value_;
-    }
-
-    Value_t valueGetIf(Value_t val=eInvalid) const
-    {
-        if(empty())
-            return val;
-        return value_;
-    }
-
-    void clear()
-    {
-        value_=eInvalid;
-    }
-
-    std::string toString(size_t width=0, const char* prefix="", const char* subfix="") const
-    {
-        auto str=std::to_string(valueGet());
-        if(str.size()<width)
-            str.insert(str.begin(), width-str.size(), '0');
-        return prefix+str+subfix;
-    }
-
-    explicit operator Value_t()
-    {
-        return value_;
-    }
-
-    Value_t encode() const
-    {
-        return value_;
-    }
-
-    void decode(Value_t val)
-    {
-        value_=val;
-    }
-
-    typedef Value_t Compact;
-
-    static constexpr Value_t invalidGet()
-    {
-        return eInvalid;
-    }
-
-    Value_t& refGet()
-    {
-        return value_;
-    }
-
-    const Value_t& refGet() const
-    {
-        return value_;
-    }
-private:
-    Value_t value_;
-};
-
-struct IntHash
-{
-    template<typename Object, typename Int>
-    std::size_t operator()(const IntValueT<Object, Int>& val) const
-    {
-        return val.valueGetIf();
-    }
-};
-
-template<typename Object, typename Enum>
-class alignas(Enum) EnumValueT: public TotalOrderT<Object>
-{
-public:
-    typedef Enum Value_t;
-
-    EnumValueT()
-        :value_(Enum::eEnumNone)
-    {
-        static_assert(Enum::eEnumNone<Enum::eEnumCount , "value error");
-        static_assert(sizeof(Object)==sizeof(Enum), "alignas error");
-    }
-
-    EnumValueT(Value_t v)
-        :value_(v)
-    {}
-
-    template<typename Int>
-    static bool valid(Int val)
-    {
-        return static_cast<Value_t>(val)>=Enum::eEnumNone && static_cast<Value_t>(val)<Enum::eEnumCount;
-    }
-
-    bool valid() const
-    {
-        return valid(value_);
-    }
-
-    bool invalid() const
-    {
-        return !valid();
-    }
-
-    bool empty() const
-    {
-        return invalid();
-    }
-
-    bool operator<(const Object& mid) const
-    {
-        assert(!empty() && !mid.empty());
-        return value_<mid.value_;
-    }
-
-    bool operator==(const Object& mid) const
-    {
-        return value_==mid.value_;
-    }
-
-    Value_t valueGet() const
-    {
-        assert(valid());
-        return value_;
-    }
-
-    Value_t valueGetIf(Value_t val=Enum::eEnumNone) const
-    {
-        if(empty())
-            return val;
-        return value_;
-    }
-
-    void clear()
-    {
-        value_=Enum::eEnumNone;
-    }
-
-    explicit operator Value_t()
-    {
-        return value_;
-    }
-
-    static constexpr size_t countGet()
-    {
-        return static_cast<size_t>(Enum::eEnumCount);
-    }
-
-    Value_t& refGet()
-    {
-        return value_;
-    }
-
-    const Value_t& refGet() const
-    {
-        return value_;
-    }
-
-    typename std::underlying_type<Value_t>::type underGet() const
-    {
-        return static_cast<typename std::underlying_type<Value_t>::type>(value_);
-    }
-private:
-    Value_t value_;
-};
-
-
-
-template<typename Int>
-Int circleInt(Int total, Int start, Int offset)
-{
-    return (start+offset)%total;
-}
-
-template<typename Object, typename Int>
-std::ostream& operator<<(std::ostream& stm, const IntValueT<Object, Int>& obj)
-{
-    stm << obj.valueGet();
-    return stm;
-}
-
-template<typename Object>
-std::ostream& operator<<(std::ostream& stm, const IntValueT<Object, uint8_t>& obj)
-{
-    stm << static_cast<unsigned>(obj.valueGet());
-    return stm;
-}
-
-template<typename Object>
-std::ostream& operator<<(std::ostream& stm, const IntValueT<Object, int8_t>& obj)
-{
-    stm << static_cast<int>(obj.valueGet());
-    return stm;
-}
 
 class IntCode
 {
@@ -379,6 +134,7 @@ private:
     template<typename Int>
     static size_t decodeImpl(size_t start, const std::string& dest, Int& val)
     {
+        assert(dest.size()-start>=sizeof(val));
         decodeImpl(&dest[0]+start, val);
         return sizeof(val);
     }
@@ -404,6 +160,305 @@ private:
 
 };
 
+struct ToString
+{
+    static std::string doit(uint8_t v)
+    {
+        char buf[32];
+        std::sprintf(buf, "%u", static_cast<unsigned>(v));
+        return buf;
+    }
+
+    static std::string doit(int8_t v)
+    {
+        char buf[32];
+        std::sprintf(buf, "%d", static_cast<int>(v));
+        return buf;
+    }
+
+    template<typename T>
+    static std::string doit(T v)
+    {
+        std::ostringstream stm;
+        stm << v;
+        return stm.str();
+    }
+};
+
+template<typename Object, typename Int>
+class alignas(Int) IntValueT: public TotalOrderT<Object>
+{
+    static const Int eInvalid=~static_cast<Int>(0);
+public:
+    typedef Int Value_t;
+    typedef IntHash Hash;
+    typedef Object ObjType;
+
+    IntValueT()
+        :value_(eInvalid)
+    {
+        static_assert(sizeof(Object)==sizeof(Int), "alignas error");
+    }
+
+    IntValueT(Value_t v)
+        :value_(v)
+    {
+    }
+
+    static bool valid(Value_t id)
+    {
+        return id!=eInvalid;
+    }
+
+    bool valid() const
+    {
+        return value_!=eInvalid;
+    }
+
+    bool invalid() const
+    {
+        return value_==eInvalid;
+    }
+
+    bool empty() const
+    {
+        return value_==eInvalid;
+    }
+
+    bool operator<(const Object& mid) const
+    {
+        assert(!empty() && !mid.empty());
+        return value_<mid.value_;
+    }
+
+    bool operator==(const Object& mid) const
+    {
+        return value_==mid.value_;
+    }
+
+    Value_t valueGet() const
+    {
+        assert(!empty());
+        return value_;
+    }
+
+    Value_t valueGetIf(Value_t val=eInvalid) const
+    {
+        if(empty())
+            return val;
+        return value_;
+    }
+
+    void clear()
+    {
+        value_=eInvalid;
+    }
+
+    std::string toString(size_t width=0, const char* prefix="", const char* subfix="") const
+    {
+        if(empty())
+            return std::string();
+
+#ifndef GMacroAndroid
+        auto str=std::to_string(valueGet());
+#else
+        auto str=ToString::doit(valueGet());
+#endif //GMacroAndroid
+        if(str.size()<width)
+            str.insert(str.begin(), width-str.size(), '0');
+        return prefix+str+subfix;
+    }
+
+    explicit operator Value_t()
+    {
+        return value_;
+    }
+
+    void encode(std::string& dest) const
+    {
+        IntCode::encode(dest, value_);
+    }
+
+    void decode(uint32_t& start, const std::string& src)
+    {
+        IntCode::decode(start, src, value_);
+        start += sizeof(value_);
+    }
+
+    Value_t compact() const
+    {
+        return value_;
+    }
+
+    void decompact(Value_t src)
+    {
+        value_=src;
+    }
+
+    typedef Value_t Compact;
+
+    static constexpr Value_t invalidGet()
+    {
+        return eInvalid;
+    }
+
+    Value_t& refGet()
+    {
+        return value_;
+    }
+
+    const Value_t& refGet() const
+    {
+        return value_;
+    }
+
+    void shift(Value_t s=1)
+    {
+        value_ += s;
+    }
+private:
+    Value_t value_;
+};
+
+struct IntHash
+{
+    template<typename Object, typename Int>
+    std::size_t operator()(const IntValueT<Object, Int>& val) const
+    {
+        return val.valueGetIf();
+    }
+};
+
+template<typename Object, typename Enum>
+class alignas(Enum) EnumValueT: public TotalOrderT<Object>
+{
+public:
+    typedef Enum Value_t;
+
+    EnumValueT()
+        :value_(Enum::eEnumNone)
+    {
+        static_assert(Enum::eEnumNone<Enum::eEnumCount , "value error");
+        static_assert(sizeof(Object)==sizeof(Enum), "alignas error");
+    }
+
+    EnumValueT(Value_t v)
+        :value_(v)
+    {}
+
+    template<typename V>
+    EnumValueT(V v)
+        :value_(static_cast<Value_t>(v))
+    {
+        assert(valid());
+    }
+
+    template<typename Int>
+    static bool valid(Int val)
+    {
+        return static_cast<Value_t>(val)>=Enum::eEnumNone && static_cast<Value_t>(val)<Enum::eEnumCount;
+    }
+
+    bool valid() const
+    {
+        return valid(value_);
+    }
+
+    bool invalid() const
+    {
+        return !valid();
+    }
+
+    bool empty() const
+    {
+        return invalid();
+    }
+
+    bool operator<(const Object& mid) const
+    {
+        assert(!empty() && !mid.empty());
+        return value_<mid.value_;
+    }
+
+    bool operator==(const Object& mid) const
+    {
+        return value_==mid.value_;
+    }
+
+    Value_t valueGet() const
+    {
+        assert(valid());
+        return value_;
+    }
+
+    Value_t valueGetIf(Value_t val=Enum::eEnumNone) const
+    {
+        if(empty())
+            return val;
+        return value_;
+    }
+
+    typename std::underlying_type<Value_t>::type castGet() const
+    {
+        return static_cast<typename std::underlying_type<Value_t>::type>(value_);
+    }
+
+    void clear()
+    {
+        value_=Enum::eEnumNone;
+    }
+
+    explicit operator Value_t()
+    {
+        return value_;
+    }
+
+    static constexpr size_t countGet()
+    {
+        return static_cast<size_t>(Enum::eEnumCount);
+    }
+
+    Value_t& refGet()
+    {
+        return value_;
+    }
+
+    const Value_t& refGet() const
+    {
+        return value_;
+    }
+private:
+    Value_t value_;
+};
+
+
+
+template<typename Int>
+Int circleInt(Int total, Int start, Int offset)
+{
+    return (start+offset)%total;
 }
 
+template<typename Object, typename Int>
+std::ostream& operator<<(std::ostream& stm, const IntValueT<Object, Int>& obj)
+{
+    stm << obj.valueGet();
+    return stm;
+}
+
+template<typename Object>
+std::ostream& operator<<(std::ostream& stm, const IntValueT<Object, uint8_t>& obj)
+{
+    stm << static_cast<unsigned>(obj.valueGet());
+    return stm;
+}
+
+template<typename Object>
+std::ostream& operator<<(std::ostream& stm, const IntValueT<Object, int8_t>& obj)
+{
+    stm << static_cast<int>(obj.valueGet());
+    return stm;
+}
+
+}
 
