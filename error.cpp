@@ -36,13 +36,31 @@ std::string ErrorCode::message() const
 
 }
 
+const std::vector<CoreError::Unit> CoreError::unitDict_
+{
+    {eGood,      "sucess, no error"},
+    {eGroupDone, "eGroupDone"},
+
+    {eBadStart,         "eBadStart"},
+    {eTimerStopping,    "timer stopping"},
+    {eNetConnectError,  "net connect error"},
+    {eLogicError,       "logic error"},
+    {eNetProtocolError, "net protocol error"},
+    {eObjectNotFound,   "object not found"},
+};
+
 CoreError::~CoreError()=default;
 
-std::string CoreError::message(int ) const
+std::string CoreError::message(int ec) const
 {
+    for(auto& u: unitDict_)
+    {
+        if(u.ec!=ec)
+            continue;
+        return u.msg;
+    }
     return std::string("need impl");
 }
 
 }
-
 

@@ -4,6 +4,7 @@
 #include<cstdint>
 
 #include<map>
+#include<functional>
 
 #include"value.hpp"
 
@@ -13,6 +14,8 @@ namespace core
 class MessageBase
 {
 public:
+    typedef std::function<const uint8_t*()> AESKeyGet;
+
     void encode(std::string& msg) const;
     void decode(uint32_t& start, const std::string& msg);
     void reset();
@@ -20,6 +23,11 @@ public:
     bool empty() const
     {
         return cmd_==0;
+    }
+
+    bool operator==(const MessageBase& o) const
+    {
+        return cmd_==o.cmd_ && dict_==o.dict_;
     }
 
 protected:
@@ -47,8 +55,13 @@ protected:
     }
 
 private:
+    const uint8_t* keyGet() const;
+
+private:
     uint16_t cmd_=0;
     std::map<uint16_t, SimpleValue> dict_;
+
+    static AESKeyGet keyGet_;
 };
 
 template<typename MCmd, typename MKey>

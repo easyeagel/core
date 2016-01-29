@@ -15,9 +15,7 @@
 //
 //=====================================================================================
 
-
-#ifndef EASY_SESSION_HPP
-#define EASY_SESSION_HPP
+#pragma once
 
 #include"io.hpp"
 #include"log.hpp"
@@ -490,6 +488,11 @@ struct IOGetDefault
     }
 };
 
+class IOBaseDefault
+{
+
+};
+
 template<typename AsyncStream, typename AsyncAcceptor, typename EndPoint,
     typename Resolver, typename Base, typename IOGet=IOGetDefault>
 class IOUnitT: public Base
@@ -507,7 +510,6 @@ public:
     IOUnitT()
         :stream_(IOGet::get().castGet())
     {}
-
 
     AsyncStream& streamGet()
     {
@@ -551,8 +553,8 @@ private:
 
 }
 
-template<typename Base>
-using TCPIOUnit=details::IOUnitT<
+template<typename Base=core::NullClass>
+using TCPIOUnitT=details::IOUnitT<
     boost::asio::ip::tcp::socket,
     boost::asio::ip::tcp::acceptor,
     boost::asio::ip::tcp::endpoint,
@@ -560,13 +562,63 @@ using TCPIOUnit=details::IOUnitT<
     Base
 >;
 
+class TCPIOUnit: public TCPIOUnitT<>
+{
+    typedef TCPIOUnitT<> BaseThis;
+public:
+    using BaseThis::BaseThis;
 
+    template<typename... Args>
+    void write(CoroutineContext& cc, ErrorCode& ecRet, Args&&... args)
+    {
+        std::array<boost::asio::const_buffer, sizeof...(Args)> bufs{boost::asio::buffer(std::forward<Args&&>(args))...};
+        cc.yield([this, &cc, &ecRet, bufs]()
+            {
+                boost::asio::async_write(streamGet(), bufs,
+                    [this, &cc, &ecRet](const boost::system::error_code& ec, size_t )
+                    {
+                        if(ec)
+                            ecRet=ec;
+                        cc.resume();
+                    }
+                );
+            }
+        );
+    }
 
+    template<typename Handle, typename... Args>
+    void write(Args&&... args, Handle&& handle)
+    {
+        std::array<boost::asio::const_buffer, sizeof...(Args)> bufs{boost::asio::buffer(std::forward<Args&&>(args))...};
+        boost::asio::async_write(streamGet(), bufs, std::move(handle));
+    }
+
+    template<typename... Args>
+    void read(CoroutineContext& cc, ErrorCode& ecRet, Args&&... args)
+    {
+        std::array<boost::asio::mutable_buffer, sizeof...(Args)> bufs{boost::asio::buffer(std::forward<Args&&>(args))...};
+        cc.yield([this, &cc, &ecRet, bufs]()
+            {
+                boost::asio::async_read(streamGet(), bufs,
+                    [this, &cc, &ecRet](const boost::system::error_code& ec, size_t )
+                    {
+                        if(ec)
+                            ecRet=ec;
+                        cc.resume();
+                    }
+                );
+            }
+        );
+    }
+
+    template<typename Handle, typename... Args>
+    void read(Args&&... args, Handle&& handle)
+    {
+        std::array<boost::asio::mutable_buffer, sizeof...(Args)> bufs{boost::asio::buffer(std::forward<Args&&>(args))...};
+        boost::asio::async_read(streamGet(), bufs, std::move(handle));
+    }
+
+};
 
 }
-
-
-
-
-#endif //EASY_SESSION_HPP
 

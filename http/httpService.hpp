@@ -31,12 +31,9 @@ class HttpService: public core::ServiceT<HttpService, HttpIOUnit>
 
 public:
     typedef HttpSSession SessionType;
-    GMacroBaseThis(HttpService);
+    GMacroBaseThis(HttpService)
 
 };
 
 }
-
-
-
 

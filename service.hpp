@@ -138,10 +138,10 @@ public:
         , strand_(MainServer::get())
     {}
 
-    void start(CallFun fun);
-    void stop (CallFun fun);
-    void run  (CallFun fun);
-    void pause(CallFun fun);
+    void start(CallFun fun=CallFun());
+    void stop (CallFun fun=CallFun());
+    void run  (CallFun fun=CallFun());
+    void pause(CallFun fun=CallFun());
 
 private:
     void acceptOpen();

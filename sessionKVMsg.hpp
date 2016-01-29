@@ -1,4 +1,4 @@
-//  Copyright [2014] <lgb (LiuGuangBao)>
+﻿//  Copyright [2014] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  sessionTcp.hpp
@@ -24,6 +24,7 @@
 #include<boost/asio/ip/tcp.hpp>
 
 #include"time.hpp"
+#include"codec.hpp"
 #include"server.hpp"
 #include"session.hpp"
 #include"message.hpp"
@@ -980,7 +981,8 @@ using SingleDuplexTableCSessionT=DuplexTableCSessionT<Object, DictN, details::Si
 namespace core
 {
 
-class SessionKVMsg: public SSessionT<TCPIOUnit>
+template<typename Obj, typename Msg>
+class SessionKVMsgT: public SSessionT<TCPIOUnit>
 {
     typedef SSessionT<TCPIOUnit> BaseThis;
     enum
@@ -988,37 +990,244 @@ class SessionKVMsg: public SSessionT<TCPIOUnit>
         eMaxBufSize=16*1024*1024-64
     };
 
+    Obj& objGet()
+    {
+        return static_cast<Obj&>(*this);
+    }
+
+    const Obj& objGet() const
+    {
+        return static_cast<Obj&>(*this);
+    }
+
 public:
     typedef std::function<void()> ExitCall;
 
-    SessionKVMsg(Stream&& stm)
+    SessionKVMsgT(Stream&& stm)
         : BaseThis(std::move(stm))
         , strand_(this->ioserviceGet().castGet())
         , writeContext_(strand_)
     {}
 
-    void sessionStart();
+    void sessionStart()
+    {
+        namespace ba=boost::asio;
+        auto self=this->shared_from_this();
 
-    void write(const std::string& str);
-    void write(const MessageBase& msg);
+        GMacroSessionLog(*this, SeverityLevel::info)
+            << "sessionStart";
 
-    void exitCallPush(ExitCall&& callIn);
+        readContext_.spawn(this->ioserviceGet(),
+            [self, this]()
+            {
+                readCoro();
 
-    IOService& ioserviceGet();
+                GMacroSessionLog(*this, SeverityLevel::info)
+                    << "readCoroEnd:waitWriteCoro";
+
+                //等待写协程退出
+                //把自己加入 strand 内，反复测试
+                while(!writeContext_.isStoped())
+                {
+                    readContext_.yield(
+                        [this]()
+                        {
+                            writeCoroWait();
+                        }
+                    );
+                }
+
+                //写协程已经退出，退出本会话
+                exitCall();
+            }
+        );
+    }
+
+    void write(const std::string& str)
+    {
+        strandGet().post(
+            [str, this]()
+            {
+                writeQueue_.push(str);
+                if(!writeNeedRecall_)
+                    return;
+                writeNeedRecall_=false;
+                writeContext_.resume();
+            }
+        );
+    }
+
+    void write(const Msg& msg)
+    {
+        write(core::encode(msg));
+    }
+
+    void exitCallPush(ExitCall&& callIn)
+    {
+        //需要串行处理，因为会话结束是异步事件
+        strandGet().post(
+            [this, handle=std::move(callIn)]()
+            {
+                if(!exitCalled_)
+                {
+                    exitCalls_.emplace_back(std::move(handle));
+                    return;
+                }
+
+                //在本函数退出之后执行
+                ioserviceGet().post(std::move(handle));
+            }
+        );
+    }
+
+    IOService& ioserviceGet()
+    {
+        return IOService::cast(BaseThis::ioUnitGet().streamGet().get_io_service());
+    }
+
+protected:
+    void messageRead()
+    {
+        for(;;)
+        {
+            packetRead();
+            if(bad())
+                return;
+
+            Msg msg;
+            core::decode(readBuf_, msg);
+
+            if(msg.empty())
+                return ecSet(CoreError::ecMake(CoreError::eNetProtocolError));
+
+            objGet().dispatch(msg);
+            if(bad())
+                return;
+        }
+    }
+
 private:
-    void readCoro();
-    void writeCoroWait();
-    void messageRead();
-    virtual void messageProcess(MessageBase& )=0;
+    void readCoro()
+    {
+        auto errCall=[this]()
+        {
+            errorMessageLog(ecReadGet());
+            sessionShutDown();
+        };
 
-    void writeInit();
-    void writeCoro();
+        writeInit();
+
+        messageRead();
+        if(bad())
+            return errCall();
+    }
+
+    void writeCoroWait()
+    {
+        strandGet().post(
+            [this]()
+            {
+                //写协程已经完成；或者还没有来得及设置退出状态，等待设置
+                if(writeContext_.isStoped() || this->condRun())
+                    return readContext_.resume();
+
+                if(writeNeedRecall_)
+                {
+                    writeNeedRecall_=false;
+                    writeContext_.resume();
+                }
+
+                //等写协程把所有表写完
+                readNeedRecall_=true;
+            }
+        );
+    }
+
+    void packetRead()
+    {
+        uint32_t len=0;
+        auto& stm=ioUnitGet();
+        stm.read(readContext_, ecGet(), boost::asio::buffer(&len, sizeof(len)));
+        if(bad())
+            return;
+
+        if(len>=eMaxBufSize)
+            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError));
+
+        readBuf_.resize(len);
+        stm.read(readContext_, ecGet(), boost::asio::buffer(const_cast<char*>(readBuf_.data()), len));
+    }
+
+    void writeInit()
+    {
+        writeContext_.start(
+            [this]()
+            {
+                this->writeCoro();
+            }
+        );
+    }
+
+    void writeCoro()
+    {
+        const auto& sc=scopedCall(
+            [this]()
+            {
+                assert(good() ? writeQueue_.empty() : true );
+                writeShutDownSet();
+                if(readNeedRecall_)
+                {
+                    readNeedRecall_=false;
+                    readContext_.resume();
+                }
+            }
+        );
+
+        while(condRun())
+        {
+            if(writeQueue_.empty())
+            {
+                writeNeedRecall_=true;
+                writeContext_.yield();
+                if(writeContext_.bad())
+                    return ecSet(writeContext_.ecReadGet());
+            } else {
+                ioUnitGet().write(writeContext_, ecGet(), writeQueue_.front());
+                if(bad())
+                    return;
+                writeQueue_.pop();
+            }
+        }
+    }
 
     auto& strandGet()
     {
         return strand_;
     }
-    void exitCall();
+
+    void exitCall()
+    {
+        GMacroSessionLog(*this, SeverityLevel::info)
+            << "exitCall";
+
+        if(exitCalls_.empty())
+            return;
+
+        auto self=this->shared_from_this();
+        ioserviceGet().post(
+            [self, this]()
+            {
+                for(auto& fun: exitCalls_)
+                {
+                    auto tmp(std::move(fun));
+                    tmp();
+                }
+
+                exitCalls_.clear();
+                exitCalled_=true;
+            }
+        );
+    }
 private:
     //写组件
     bool writeNeedRecall_=false;

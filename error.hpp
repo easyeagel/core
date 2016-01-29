@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include<vector>
 #include<algorithm>
 
 #define BOOST_SYSTEM_NO_DEPRECATED
@@ -171,6 +172,14 @@ public:
     }
 
     std::string message(int ec) const;
+
+    struct Unit
+    {
+        Code_t ec;
+        const char* msg;
+    };
+
+    static const std::vector<Unit> unitDict_;
 };
 
 template<typename Base=NullClass>

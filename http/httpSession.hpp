@@ -24,17 +24,9 @@
 namespace core
 {
 
-namespace details
+class HttpIOUnit: public core::TCPIOUnit
 {
-    class HttpIOUnit
-    {
-
-    };
-}
-
-class HttpIOUnit: public core::TCPIOUnit<details::HttpIOUnit>
-{
-    typedef core::TCPIOUnit<details::HttpIOUnit> BaseThis;
+    typedef core::TCPIOUnit BaseThis;
 public:
     GMacroBaseThis(HttpIOUnit)
 

@@ -2,9 +2,11 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(coreSrc
+    message.cpp message.hpp value.cpp value.hpp
+    sessionKVMsg.cpp sessionKVMsg.hpp
     kvStore.cpp base.cpp error.cpp md5sum.cpp string.cpp server.cpp
     encode.cpp pipe.cpp io.cpp service.cpp sessionPool.cpp time.cpp
-    log.cpp session.cpp daemon.cpp hash.cpp
+    log.cpp session.cpp daemon.cpp hash.cpp tinyaes.cpp tinyaes.hpp
 
     http/http.cpp
     http/http.hpp
@@ -23,6 +25,10 @@ set(coreSrc
     http/file.hpp
 )
 
+if(OptLinux)
+    set(coreSrc ${coreSrc} postgresql.cpp postgresql.hpp)
+endif()
+
 add_library(core STATIC ${coreSrc})
 
 set(BoostLibs
@@ -40,8 +46,10 @@ if(OptWindows)
         target_link_libraries(core debug lib${file}${dsub} optimized lib${file}${rsub})
     endforeach()
 elseif(OptLinux)
-    set(sysLibs crypto bzip2 z m)
+    set(sysLibs crypto bzip2 pq z m)
     target_link_libraries(core ${refLibs} ${BoostLibs} ${sysLibs} pthread dl)
 endif()
 
+add_subdirectory(tinyAES128)
+target_link_libraries(core tinyAES128)
 

@@ -379,33 +379,75 @@ public:
 
 function<TimePush>::type const timePush = {{}};
 
-static const sregex timePoint=repeat<4>(_d) >> '-' >> repeat<2>(_d) >> '-' >> repeat<2>(_d) >> +as_xpr(' ')
-        >> repeat<2>(_d) >> ':' >> repeat<2>(_d) >> ':' >> repeat<2>(_d) >> *('.' >> repeat<1, 6>(_d));
-static const sregex timeStart=((s1=as_xpr("start")) >> *_s >> '{' >> *_s >> (s2=timePoint) >> *_s >> '}')
-        [timePush(phTimePattern, as<std::string>(s1), as<std::string>(s2))];
+static const sregex& timePoint()
+{
+    static sregex gs=repeat<4>(_d) >> '-' >> repeat<2>(_d) >> '-' >> repeat<2>(_d) >> +as_xpr(' ')
+            >> repeat<2>(_d) >> ':' >> repeat<2>(_d) >> ':' >> repeat<2>(_d) >> *('.' >> repeat<1, 6>(_d));
+    return gs;
+}
 
-static const sregex timeEnd=((s1=as_xpr("end")) >> *_s >> '{' >> *_s >> (s2=timePoint) >> *_s >> '}')
+static const sregex& timeStart()
+{
+    static sregex gs=((s1=as_xpr("start")) >> *_s >> '{' >> *_s >> (s2=timePoint()) >> *_s >> '}')
         [timePush(phTimePattern, as<std::string>(s1), as<std::string>(s2))];
+    return gs;
+}
 
-static const sregex number       = (s1=+_d)
+static const sregex& timeEnd()
+{
+    static sregex gs=((s1=as_xpr("end")) >> *_s >> '{' >> *_s >> (s2=timePoint()) >> *_s >> '}')
+        [timePush(phTimePattern, as<std::string>(s1), as<std::string>(s2))];
+    return gs;
+}
+
+static const sregex& number()
+{
+    static sregex gs = (s1=+_d)
         [push_back(phTimeUnitList, make_pair(as<uint32_t>(s1), as<uint32_t>(s1)))];
+    return gs;
+}
 
-static const sregex numberPair   = ('(' >> *_s >> (s1=+_d) >> *_s >> ',' >> *_s >> (s2=+_d) >> *_s >> ')')
+static const sregex& numberPair()
+{
+    static sregex gs=('(' >> *_s >> (s1=+_d) >> *_s >> ',' >> *_s >> (s2=+_d) >> *_s >> ')')
         [push_back(phTimeUnitList, make_pair(as<uint32_t>(s1), as<uint32_t>(s2)))];
+    return gs;
+}
 
-static const sregex numberUnit   = number | numberPair;
-static const sregex timeUnitList = numberUnit >> *( *_s >> ',' >> *_s >> numberUnit);
+static const sregex& numberUnit()
+{
+    static sregex gs=number()| numberPair();
+    return gs;
+}
 
-static const sregex timeLoopUnit = ((s1=as_xpr("year")|"month"|"date"|"hour"|"minute"|"second"|"week")
-        >> *_s >> '[' >> *_s >> timeUnitList >> *_s >> ']')
+static const sregex& timeUnitList()
+{
+    static sregex gs=numberUnit() >> *( *_s >> ',' >> *_s >> numberUnit());
+    return gs;
+}
+
+static const sregex& timeLoopUnit()
+{
+    static sregex gs=((s1=as_xpr("year")|"month"|"date"|"hour"|"minute"|"second"|"week")
+        >> *_s >> '[' >> *_s >> timeUnitList() >> *_s >> ']')
         [timePush(phTimePattern, as<std::string>(s1), phTimeUnitList)];
+    return gs;
+}
 
-static const sregex timeLoop = as_xpr("time") >> *_s >> '{'
-        >> *_s >> timeLoopUnit >> *( *_s >> '-' >> *_s >> timeLoopUnit)
+static const sregex& timeLoop()
+{
+    static sregex gs=as_xpr("time") >> *_s >> '{'
+        >> *_s >> timeLoopUnit() >> *( *_s >> '-' >> *_s >> timeLoopUnit())
         >> *_s >> '}';
+    return gs;
+}
 
-static const sregex timeLine = repeat<0,1>(timeStart)
-        >> +(*_s >> repeat<0,1>("->") >> *_s >> timeLoop) >> repeat<0,1>(*_s >> "->" >> *_s >> timeEnd);
+static const sregex& timeLine()
+{
+    static sregex gs=repeat<0,1>(timeStart())
+        >> +(*_s >> repeat<0,1>("->") >> *_s >> timeLoop()) >> repeat<0,1>(*_s >> "->" >> *_s >> timeEnd());
+    return gs;
+}
 
 }  //namespace xp
 
@@ -441,7 +483,7 @@ bool TimePattern::init(const std::string& line)
     what.let(xp::phTimePattern=*this);
     what.let(xp::phTimeUnitList=list);
 
-    if(false==bx::regex_match(line, what, xp::timeLine))
+    if(false==bx::regex_match(line, what, xp::timeLine()))
         return false;
     bitCorrect();
     return start_<end_;
@@ -453,7 +495,7 @@ bool TimePattern::start(const std::string& line)
     bx::smatch what;
     what.let(xp::phTimePattern=*this);
 
-    return bx::regex_match(line, what, xp::timeStart);
+    return bx::regex_match(line, what, xp::timeStart());
 }
 
 bool TimePattern::time(const std::string& line)
@@ -465,7 +507,7 @@ bool TimePattern::time(const std::string& line)
     what.let(xp::phTimePattern=*this);
     what.let(xp::phTimeUnitList=list);
 
-    return bx::regex_match(line, what, xp::timeLoop);
+    return bx::regex_match(line, what, xp::timeLoop());
 }
 
 bool TimePattern::end(const std::string& line)
@@ -474,7 +516,7 @@ bool TimePattern::end(const std::string& line)
     bx::smatch what;
     what.let(xp::phTimePattern=*this);
 
-    if(false==bx::regex_match(line, what, xp::timeEnd))
+    if(false==bx::regex_match(line, what, xp::timeEnd()))
         return false;
     bitCorrect();
     return start_<end_;
