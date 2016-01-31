@@ -36,6 +36,12 @@ std::string ErrorCode::message() const
 
 }
 
+const CoreError& CoreError::instance()
+{
+    static CoreError gs;
+    return gs;
+}
+
 const std::vector<CoreError::Unit> CoreError::unitDict_
 {
     {eGood,      "sucess, no error"},

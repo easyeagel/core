@@ -111,11 +111,7 @@ class CoreError: public core::details::ECatBase
 public:
     ~CoreError();
 
-    static const CoreError& instance()
-    {
-        static CoreError gs;
-        return gs;
-    }
+    static const CoreError& instance();
 
     enum Code_t
     {
