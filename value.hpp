@@ -32,7 +32,9 @@ enum class SimpleValue_t: uint8_t
 {
     eNone= 0,
     eInt,
+    eInt64,
     eIntList,
+    eInt64List,
     eString,
     eStringList,
 };
@@ -50,9 +52,21 @@ struct SimpleValueTypeMapT<SimpleValue_t::eInt>
 };
 
 template<>
+struct SimpleValueTypeMapT<SimpleValue_t::eInt64>
+{
+    typedef int64_t Value;
+};
+
+template<>
 struct SimpleValueTypeMapT<SimpleValue_t::eIntList>
 {
     typedef std::vector<int32_t> Value;
+};
+
+template<>
+struct SimpleValueTypeMapT<SimpleValue_t::eInt64List>
+{
+    typedef std::vector<int64_t> Value;
 };
 
 template<>
@@ -73,6 +87,7 @@ class SimpleValue
 {
 public:
     typedef std::vector<int32_t> IntList;
+    typedef std::vector<int64_t> Int64List;
     typedef std::vector<std::string> StringList;
 
 private:
@@ -120,10 +135,31 @@ public:
     void init(SimpleValue&& other);
 
     template<typename Int>
-    void init(Int val, typename std::enable_if<std::is_integral<Int>::value>::type* =nullptr)
+    void init(Int val,
+        typename std::enable_if<std::is_integral<Int>::value && (sizeof(Int)<=4)>::type* = nullptr
+    )
+    {
+        init(static_cast<int32_t>(val));
+    }
+
+    template<typename Int>
+    void init(Int val,
+        typename std::enable_if<std::is_integral<Int>::value && (sizeof(Int)>4)>::type* = nullptr
+    )
+    {
+        init(static_cast<int64_t>(val));
+    }
+
+    void init(int32_t val)
     {
         tag_=SimpleValue_t::eInt;
         new (pas<int32_t>()) int32_t(val);
+    }
+
+    void init(int64_t val)
+    {
+        tag_=SimpleValue_t::eInt64;
+        new (pas<int64_t>()) int64_t(val);
     }
 
     void init(const char* s, size_t n)
@@ -152,7 +188,22 @@ public:
     template<typename Itr>
     void init(Itr itr, Itr end,
         typename std::enable_if<
-            std::is_integral<typename std::iterator_traits<Itr>::value_type>::value>::type* =nullptr)
+            std::is_integral<typename std::iterator_traits<Itr>::value_type>::value
+            && (sizeof(typename std::iterator_traits<Itr>::value_type)>4)
+        >::type* =nullptr
+    )
+    {
+        tag_=SimpleValue_t::eInt64List;
+        new (pas<Int64List>()) Int64List(itr, end);
+    }
+
+template<typename Itr>
+    void init(Itr itr, Itr end,
+        typename std::enable_if<
+            std::is_integral<typename std::iterator_traits<Itr>::value_type>::value
+            && sizeof(typename std::iterator_traits<Itr>::value_type)<=4
+        >::type* =nullptr
+    )
     {
         tag_=SimpleValue_t::eIntList;
         new (pas<IntList>()) IntList(itr, end);

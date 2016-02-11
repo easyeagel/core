@@ -29,6 +29,7 @@
 
 #include"msvc.hpp"
 #include"macro.hpp"
+#include"codec.hpp"
 #include"typedef.hpp"
 #include"operator.hpp"
 
@@ -186,6 +187,17 @@ public:
         return eMaxSize;
     }
 
+
+    const FixedStringT& baseGet() const
+    {
+        return *this;
+    }
+
+    FixedStringT& baseGet()
+    {
+        return *this;
+    }
+
     bool empty() const
     {
         return sizeGet()==0;
@@ -193,12 +205,24 @@ public:
 
     bool operator<(const FixedStringT& right) const
     {
-        return std::strcmp(cstrGet(), right.cstrGet())<0;
+        const uint8_t* s=reinterpret_cast<const uint8_t*>(cstrGet());
+        const uint8_t* o=reinterpret_cast<const uint8_t*>(right.cstrGet());
+        auto const sz=std::min(right.sizeGet(), sizeGet());
+        for(size_t i=0; i<sz; ++i)
+        {
+            if(s[i]==o[i])
+                continue;
+            return s[i]<o[i];
+        }
+
+        return sizeGet()<right.sizeGet();
     }
 
     bool operator==(const FixedStringT& right) const
     {
-        return std::strcmp(cstrGet(), right.cstrGet())==0;
+        if(sizeGet()!=right.sizeGet())
+            return false;
+        return std::memcmp(cstrGet(), right.cstrGet(), sizeGet())==0;
     }
 
     explicit operator const char* () const
@@ -267,14 +291,17 @@ public:
 
     typedef std::string Compact;
 
-    std::string encode() const
+    void encode(std::string& dest) const
     {
-        return toString();
+        const auto t=toString();
+        core::encode(dest, t);
     }
 
-    void encode(const std::string& code)
+    void decode(uint32_t& start, const std::string& code)
     {
-        fromString(code);
+        std::string t;
+        core::decode(start, code, t);
+        fromString(t);
     }
 
 #ifndef _MSC_VER
@@ -292,14 +319,14 @@ protected:
 
     void sizeSet()
     {
-        size_=std::strlen(bt_);
+        size_=static_cast<uint8_t>(std::strlen(bt_));
         assert(size_<=eMaxSize);
     }
 
     void sizeSet(size_t sz)
     {
         assert(sz<=eMaxSize);
-        size_=sz;
+        size_=static_cast<uint8_t>(sz);
     }
 private:
     Count_t size_;
@@ -534,7 +561,11 @@ public:
     class Value: public T
     {
     public:
-        using T::T;
+        template<typename... Args>
+        Value(Args&&... args)
+            :T(std::forward<Args&&>(args)...)
+        {}
+
     private:
         char unused[SizeFixed-sizeof(T)]={};
     };

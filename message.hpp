@@ -36,7 +36,7 @@ protected:
         cmd_=cmd;
     }
     
-    const uint16_t& cmdGet() const
+    uint16_t cmdGet() const
     {
         return cmd_;
     }
@@ -44,6 +44,17 @@ protected:
     void set(const uint16_t& key, const SimpleValue& val)
     {
         dict_[key]=val;
+    }
+
+    void set(const uint16_t& key, SimpleValue&& val)
+    {
+        dict_[key]=std::move(val);
+    }
+
+    template<typename... Args>
+    void set(const uint16_t& key, Args&&... args)
+    {
+        dict_[key]=SimpleValue(std::forward<Args&&>(args)...);
     }
 
     const SimpleValue& get(const uint16_t& key) const
@@ -73,14 +84,15 @@ public:
         MessageBase::cmdSet(static_cast<uint16_t>(cmd));
     }
     
-    const MCmd& cmdGet() const
+    MCmd cmdGet() const
     {
         return static_cast<MCmd>(MessageBase::cmdGet());
     }
 
-    void set(const MKey& key, const SimpleValue& val)
+    template<typename... Args>
+    void set(const MKey& key, Args&&... args)
     {
-        MessageBase::set(static_cast<uint16_t>(key), val);
+        MessageBase::set(static_cast<uint16_t>(key), std::forward<Args&&>(args)...);
     }
 
     const SimpleValue& get(const MKey& key) const

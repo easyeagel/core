@@ -124,6 +124,8 @@ public:
         eLogicError,
         eNetProtocolError,
         eObjectNotFound,
+        eMemberIsFound,
+        eMemberInfoDup, //用户信息重复
 
         eEnumCount
     };

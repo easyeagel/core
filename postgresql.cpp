@@ -17,12 +17,23 @@
 //
 
 #include<vector>
+#include<iostream>
 #include"postgresql.hpp"
 
 namespace core
 {
 
 PostgreSQL::PostgreSQL()=default;
+
+void PostgreSQL::begin()
+{
+    execute("BEGAIN;");
+}
+
+void PostgreSQL::commit()
+{
+    execute("COMMIT;");
+}
 
 void PostgreSQL::connect()
 {
@@ -55,6 +66,28 @@ void PostgreSQL::execute(PGStatement& st, PGResult& rlt)
     st.execute(*this, rlt);
 }
 
+void PostgreSQL::execute(const std::string& sql)
+{
+    core::PGResult rlt;
+    core::PGStatement stmt(sql);
+    execute(stmt, rlt);
+    if(bad())
+        return;
+
+    while(rlt.next())
+        /* empty */;
+}
+
+void PostgreSQL::execute(PGStatement& stmt)
+{
+    core::PGResult rlt;
+    execute(stmt, rlt);
+    if(bad())
+        return;
+    while(rlt.next())
+        /* empty */;
+}
+
 void PGStatement::execute(PostgreSQL& pg, PGResult& rlt)
 {
     const auto sz=params_.size();
@@ -63,7 +96,10 @@ void PGStatement::execute(PostgreSQL& pg, PGResult& rlt)
 
     auto ret=::PQsendQueryParams(pg.pg_, sql_.c_str(), sz, nullptr, pgParams_.data(), pgSizes_.data(), pgFormat_.data(), 1);
     if(ret==0)
+    {
+        ::PQerrorMessage(pg.pg_);
         return;
+    }
 
     ret=::PQsetSingleRowMode(pg.pg_);
     if(ret==0)
@@ -88,6 +124,8 @@ bool PGResult::next()
         if(rlt_==nullptr)
             return false;
 
+        std::cout << ::PQresStatus(::PQresultStatus(rlt_))
+            << ::PQresultErrorMessage(rlt_) << std::endl;
         if(::PQntuples(rlt_)>0)
             return true;
     }
@@ -133,6 +171,12 @@ bool PGResult::isNull(int idx) const
     if(rlt_)
         return ::PQgetisnull(rlt_, 0, idx)!=0 ? true : false;
     return true;
+}
+
+void PGResult::discard()
+{
+    while(next())
+       /* empty */ ;
 }
 
 }

@@ -16,8 +16,11 @@
 //=====================================================================================
 //
 
+#pragma once
+
 #include<map>
 #include<string>
+#include<vector>
 #include<core/codec.hpp>
 #ifdef GMacroLinux
 #include<postgresql/libpq-fe.h>
@@ -38,6 +41,9 @@ class PostgreSQL
 public:
     PostgreSQL();
 
+    void begin();
+    void commit();
+
     void paramSet(const std::string& k, const std::string& v)
     {
         params_[k]=v;
@@ -50,6 +56,9 @@ public:
     }
 
     void connect();
+
+    void execute(const std::string& sql);
+    void execute(PGStatement& st);
     void execute(PGStatement& st, PGResult& rlt);
 
     std::string message() const;
@@ -57,6 +66,30 @@ public:
 private:
     ::PGconn* pg_=nullptr;
     std::map<std::string, std::string> params_;
+};
+
+class PGTransaction
+{
+public:
+    PGTransaction(PostgreSQL& pg)
+        :pg_(pg)
+    {
+        pg_.begin();
+    }
+
+    void lost()
+    {
+        lost_=true;
+    }
+
+    ~PGTransaction()
+    {
+        if(lost_==false)
+            pg_.commit();
+    }
+private:
+    bool lost_=false;
+    PostgreSQL& pg_;
 };
 
 class PGStatement
@@ -150,6 +183,8 @@ public:
         auto ptr=fieldGet(idx);
         const auto sz=fieldSizeGet(idx);
         assert(sz==sizeof(Int));
+        if(sz!=sizeof(Int))
+            return -1;
 
         Int ret=*ptr;
         for(auto p=ptr+1; p<ptr+sz; ++p)
@@ -161,12 +196,22 @@ public:
         return ret;
     }
 
+    template<typename IntVal>
+    IntVal intValRead(int idx)
+    {
+        if(isNull(idx))
+            return IntVal();
+        return intRead<typename IntVal::Value_t>(idx);
+    }
+
     std::string valRead(int idx)
     {
         auto ptr=fieldGet(idx);
         const auto sz=fieldSizeGet(idx);
         return std::string(reinterpret_cast<const char*>(ptr), sz);
     };
+
+    void discard();
 
     ~PGResult();
 

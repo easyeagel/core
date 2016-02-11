@@ -109,7 +109,7 @@ public:
 
 protected:
     CallFun handle_;
-    Status_t status_;
+    Status_t status_=eStatusUnStart;
     SteadyTimer timer_;
 };
 

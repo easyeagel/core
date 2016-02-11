@@ -53,6 +53,8 @@ const std::vector<CoreError::Unit> CoreError::unitDict_
     {eLogicError,       "logic error"},
     {eNetProtocolError, "net protocol error"},
     {eObjectNotFound,   "object not found"},
+    {eMemberIsFound,    "memeber is found"},
+    {eMemberInfoDup,    "member info dup"},
 };
 
 CoreError::~CoreError()=default;
