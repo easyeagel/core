@@ -27,12 +27,17 @@ PostgreSQL::PostgreSQL()=default;
 
 void PostgreSQL::begin()
 {
-    execute("BEGAIN;");
+    execute("BEGIN;");
 }
 
 void PostgreSQL::commit()
 {
     execute("COMMIT;");
+}
+
+void PostgreSQL::rollback()
+{
+    execute("ROLLBACK;");
 }
 
 void PostgreSQL::connect()

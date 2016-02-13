@@ -55,6 +55,7 @@ const std::vector<CoreError::Unit> CoreError::unitDict_
     {eObjectNotFound,   "object not found"},
     {eMemberIsFound,    "memeber is found"},
     {eMemberInfoDup,    "member info dup"},
+    {eMemberIsNotFound, "member in not found"},
 };
 
 CoreError::~CoreError()=default;

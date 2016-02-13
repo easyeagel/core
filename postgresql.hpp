@@ -43,6 +43,7 @@ public:
 
     void begin();
     void commit();
+    void rollback();
 
     void paramSet(const std::string& k, const std::string& v)
     {
@@ -86,6 +87,8 @@ public:
     {
         if(lost_==false)
             pg_.commit();
+        else
+            pg_.rollback();
     }
 private:
     bool lost_=false;

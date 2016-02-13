@@ -126,6 +126,7 @@ public:
         eObjectNotFound,
         eMemberIsFound,
         eMemberInfoDup, //用户信息重复
+        eMemberIsNotFound,
 
         eEnumCount
     };
