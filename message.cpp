@@ -79,7 +79,7 @@ const uint8_t* MessageBase::keyGet() const
 {
     if(keyGet_)
         return keyGet_();
-    return reinterpret_cast<const uint8_t*>("2b7e151628aed2a6abf7158809cf4f3c");
+    return reinterpret_cast<const uint8_t*>("2w7e9516283ed2a6acf71j8809cf4c3c");
 }
 
 void MessageBase::reset()

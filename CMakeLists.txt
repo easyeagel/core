@@ -46,7 +46,7 @@ if(OptWindows)
         target_link_libraries(core debug lib${file}${dsub} optimized lib${file}${rsub})
     endforeach()
 elseif(OptLinux)
-    set(sysLibs crypto bzip2 pq z m)
+    set(sysLibs crypto bzip2 libpq.a z m)
     target_link_libraries(core ${refLibs} ${BoostLibs} ${sysLibs} pthread dl)
 endif()
 

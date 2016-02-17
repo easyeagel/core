@@ -51,6 +51,19 @@ class SessionKVMsgT: public SSessionT<TCPIOUnit>
         return static_cast<Obj&>(*this);
     }
 
+    void handShake(core::CoroutineContext& ctx)
+    {
+        typedef typename Msg::Cmd Cmd;
+        typedef typename Msg::Key Key;
+
+        Msg msg;
+        msg.cmdSet(Cmd::eHandShake);
+        msg.set(Key::eMsgIndex, msgIndex_++);
+        msg.set(Key::eSessionID, sessionIDGet());
+
+        ioUnitGet().write(ctx, ecGet(), msgToString(msg));
+    }
+
 public:
     typedef std::function<void()> ExitCall;
 
@@ -58,6 +71,8 @@ public:
         : BaseThis(std::move(stm))
         , strand_(this->ioserviceGet().castGet())
         , writeContext_(strand_)
+        , msgIndex_(msgIndexInitGet())
+        , remoteMsgIndex_(msgIndex_)
     {}
 
     void sessionStart()
@@ -94,26 +109,20 @@ public:
         );
     }
 
-    void write(const std::string& str)
+    void write(Msg& msg)
     {
-        strandGet().post(
-            [str, this]() mutable
-            {
-                writeQueue_.push(std::move(str));
-                if(!writeNeedRecall_)
-                    return;
-                writeNeedRecall_=false;
-                writeContext_.resume();
-            }
-        );
+        typedef typename Msg::Key Key;
+        msg.set(Key::eMsgIndex, msgIndex_++);
+        msg.set(Key::eSessionID, sessionIDGet());
+        write(msgToString(msg));
     }
 
-    void write(const Msg& msg)
+    static std::string msgToString(const Msg& msg)
     {
         auto str=core::encode(msg);
         std::string tmp=core::encode(static_cast<uint32_t>(str.size()));
         tmp += str;
-        write(std::move(tmp));
+        return std::move(tmp);
     }
 
     void exitCallPush(ExitCall&& callIn)
@@ -154,10 +163,34 @@ protected:
             if(msg.empty())
                 return ecSet(CoreError::ecMake(CoreError::eNetProtocolError));
 
+            //验证消息编号
+            typedef typename Msg::Key Key;
+            auto& index=msg.get(Key::eMsgIndex);
+            if(index.invalid()
+                || index.tag()!=core::SimpleValue_t::eInt
+                || static_cast<uint32_t>(index.intGet())!=remoteMsgIndex_++)
+            {
+                return ecSet(CoreError::ecMake(CoreError::eNetProtocolError));
+            }
+
             objGet().dispatch(msg);
             if(bad())
                 return;
         }
+    }
+
+    void write(const std::string& str)
+    {
+        strandGet().post(
+            [str, this]() mutable
+            {
+                writeQueue_.push(std::move(str));
+                if(!writeNeedRecall_)
+                    return;
+                writeNeedRecall_=false;
+                writeContext_.resume();
+            }
+        );
     }
 
 private:
@@ -168,6 +201,10 @@ private:
             errorMessageLog(ecReadGet());
             sessionShutDown();
         };
+
+        objGet().handShake(readContext_);
+        if(bad())
+            return errCall();
 
         writeInit();
 
@@ -286,6 +323,13 @@ private:
             }
         );
     }
+
+    static uint32_t msgIndexInitGet()
+    {
+        static uint32_t gs=static_cast<uint32_t>(std::time(nullptr));
+        return gs++;
+    }
+
 private:
     //写组件
     bool writeNeedRecall_=false;
@@ -302,6 +346,9 @@ private:
     bool exitCalled_=false;
     std::list<ExitCall> exitCalls_;
 
+    //消息编号
+    std::atomic<uint32_t> msgIndex_;
+    uint32_t remoteMsgIndex_;
 };
 
 }

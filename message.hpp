@@ -65,6 +65,12 @@ protected:
         return itr->second;
     }
 
+    template<typename Call>
+    static void aesKeyGetSet(Call&& call)
+    {
+        keyGet_=std::move(call);
+    }
+
 private:
     const uint8_t* keyGet() const;
 
@@ -79,6 +85,9 @@ template<typename MCmd, typename MKey>
 class MessageT: public MessageBase
 {
 public:
+    typedef MCmd Cmd;
+    typedef MKey Key;
+
     void cmdSet(const MCmd& cmd)
     {
         MessageBase::cmdSet(static_cast<uint16_t>(cmd));

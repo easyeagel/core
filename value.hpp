@@ -230,6 +230,18 @@ template<typename Itr>
         new (pas<IntList>()) IntList(std::forward<IntList&&>(v));
     }
 
+    void init(const Int64List& v)
+    {
+        tag_=SimpleValue_t::eInt64List;
+        new (pas<Int64List>()) Int64List(v);
+    }
+
+    void init(Int64List&& v)
+    {
+        tag_=SimpleValue_t::eInt64List;
+        new (pas<Int64List>()) Int64List(std::forward<Int64List&&>(v));
+    }
+
     void init(const StringList& v)
     {
         tag_=SimpleValue_t::eStringList;
