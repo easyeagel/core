@@ -28,12 +28,7 @@ namespace core
 
 std::string ErrorCode::message() const
 {
-#ifdef _MSC_VER
-    return WCharConverter::to(core::mbstowcs(Base::message()));
-#else
     return Base::message();
-#endif
-
 }
 
 const CoreError& CoreError::instance()
@@ -44,18 +39,19 @@ const CoreError& CoreError::instance()
 
 const std::vector<CoreError::Unit> CoreError::unitDict_
 {
-    {eGood,      "sucess, no error"},
+    {eGood,      u8"成功"},
     {eGroupDone, "eGroupDone"},
 
     {eBadStart,         "eBadStart"},
-    {eTimerStopping,    "timer stopping"},
-    {eNetConnectError,  "net connect error"},
-    {eLogicError,       "logic error"},
-    {eNetProtocolError, "net protocol error"},
-    {eObjectNotFound,   "object not found"},
-    {eMemberIsFound,    "memeber is found"},
-    {eMemberInfoDup,    "member info dup"},
-    {eMemberIsNotFound, "member in not found"},
+
+    {eTimerStopping,    u8"定时器正在停止"},
+    {eNetConnectError,  u8"网络连接错误"},
+    {eLogicError,       u8"逻辑错误"},
+    {eNetProtocolError, u8"网络协议错误"},
+    {eObjectNotFound,   u8"对象不存在"},
+    {eMemberIsFound,    u8"会员已存在"},
+    {eMemberInfoDup,    u8"会员信息重复"},
+    {eMemberIsNotFound, u8"会员不存在"},
 };
 
 CoreError::~CoreError()=default;
@@ -68,7 +64,7 @@ std::string CoreError::message(int ec) const
             continue;
         return u.msg;
     }
-    return std::string("need impl");
+    return std::string(u8"未知错误");
 }
 
 }
