@@ -8,21 +8,21 @@ set(coreSrc
     encode.cpp pipe.cpp io.cpp service.cpp sessionPool.cpp time.cpp
     log.cpp session.cpp daemon.cpp hash.cpp tinyaes.cpp tinyaes.hpp
 
-    http/http.cpp
-    http/http.hpp
-    http/httpParser.cpp
-    http/httpParser.hpp
-    http/httpRoot.cpp
-    http/httpRoot.hpp
-    http/httpService.hpp
-    http/httpSession.cpp
-    http/httpSession.hpp
-    http/webView.cpp
-    http/webView.hpp
-    http/mutilpart.cpp
-    http/mutilpart.hpp
     http/file.cpp
     http/file.hpp
+    http/http.cpp
+    http/http.hpp
+    http/mutilpart.cpp
+    http/mutilpart.hpp
+    http/parser.cpp
+    http/parser.hpp
+    http/root.cpp
+    http/root.hpp
+    http/service.hpp
+    http/session.cpp
+    http/session.hpp
+    http/webView.cpp
+    http/webView.hpp
 )
 
 if(OptLinux)
