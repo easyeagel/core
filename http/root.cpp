@@ -21,7 +21,7 @@
 #include<boost/filesystem/fstream.hpp>
 #include<boost/algorithm/string/predicate.hpp>
 
-#include<core/http/httpRoot.hpp>
+#include<core/http/root.hpp>
 
 namespace core
 {

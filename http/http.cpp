@@ -22,8 +22,8 @@
 #include<core/msvc.hpp>
 #include<core/error.hpp>
 #include<core/http/http.hpp>
-#include<core/http/httpRoot.hpp>
-#include<core/http/httpSession.hpp>
+#include<core/http/root.hpp>
+#include<core/http/session.hpp>
 
 namespace core
 {

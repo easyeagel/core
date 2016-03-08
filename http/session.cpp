@@ -17,7 +17,7 @@
 //
 
 #include<core/sessionPool.hpp>
-#include<core/http/httpSession.hpp>
+#include<core/http/session.hpp>
 
 namespace core
 {
