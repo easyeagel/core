@@ -150,6 +150,12 @@ void HttpResponse::reset(HttpStatus st)
     HttpMessage::reset();
 }
 
+
+HttpMessage::HttpMessage()
+{
+    privateHead_["Content-Length"]=std::to_string(bodyCache_.size());
+}
+
 template<typename C>
 void HttpMessage::headCacheImpl(const C& c)
 {
@@ -246,39 +252,15 @@ public:
     }
 };
 
-class HomeHttpDispatcher: public HttpDispatch::Dispatcher
-{
-public:
-    void headCompleteCall(ErrorCode& , const HttpParser& ) final
-    {
-    }
-
-    void bodyCall(ErrorCode& , const HttpParser& , const char* , size_t ) final
-    {
-    }
-
-    HttpResponseSPtr bodyCompleteCall(ErrorCode& ec, const HttpParser& hp) final
-    {
-        if(hp.methodGet()==HTTP_GET)
-        {
-            //首先在FileRoot内找，否则就不存在
-            auto& ft=FileRoot::instance();
-            auto ret=ft.get(hp.pathGet());
-            if(ret)
-                return ret;
-        }
-
-        return HttpDispatch::httpHomePage(ec, hp);
-    }
-};
-
 }
+
+HttpDispatch::Dispatcher::~Dispatcher()=default;
 
 HttpDispatch::HttpDispatch()
 {
     insert("/", [this](const HttpParser& )
         {
-            return std::make_shared<HomeHttpDispatcher>();
+            return std::make_shared<DefautlHttpDispatcher>();
         }
     );
 }
@@ -287,7 +269,7 @@ HttpResponseSPtr HttpDispatch::httpHomePage(ErrorCode& , const HttpParser& )
 {
     auto respones=std::make_shared<HttpResponse>(HttpResponse::eHttpOk);
     respones->commonHeadSet("Content-Type", "text/html;charset=utf-8");
-    respones->commonHeadSet("Connection", "Close");
+    respones->commonHeadSet("Connection", "keep-alive");
     respones->bodySet(R"HTML(
     <html>
         <head>
@@ -345,9 +327,19 @@ HttpResponseSPtr HttpDispatch::logicNotFound(const std::string& )
 
 HttpResponseSPtr HttpDispatch::redirectMove(const char* path)
 {
+    auto respones=std::make_shared<HttpResponse>(HttpResponse::eHttpMove);
+    respones->commonHeadSet("Location", path);
+    respones->commonHeadSet("Connection", "keep-alive");
+    respones->cache();
+
+    return respones;
+}
+
+HttpResponseSPtr HttpDispatch::redirectFound(const char* path)
+{
     auto respones=std::make_shared<HttpResponse>(HttpResponse::eHttpFound);
     respones->commonHeadSet("Location", path);
-    respones->commonHeadSet("Connection", "Close");
+    respones->commonHeadSet("Connection", "keep-alive");
     respones->cache();
 
     return respones;

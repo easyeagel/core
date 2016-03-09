@@ -26,7 +26,7 @@
 namespace core
 {
 
-void MutilpartData::parse(ErrorCode& ec, const Byte* bt, size_t size)
+void MutilpartData::parse(ErrorCode& , const Byte* bt, size_t size)
 {
     for(auto const end=bt+size; bt<end;)
     {

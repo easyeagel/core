@@ -23,6 +23,8 @@ set(coreSrc
     http/session.hpp
     http/webView.cpp
     http/webView.hpp
+    http/cookie.cpp
+    http/cookie.hpp
 )
 
 if(OptLinux)

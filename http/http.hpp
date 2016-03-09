@@ -158,6 +158,8 @@ class HttpMessage
 public:
     typedef std::map<std::string, std::string> HeaderDict;
 
+    HttpMessage();
+
     const std::string& headGet() const
     {
         return headCache_;
@@ -300,8 +302,7 @@ public:
             return false;
         }
 
-        virtual ~Dispatcher()
-        {}
+        virtual ~Dispatcher();
     };
 
     typedef std::shared_ptr<Dispatcher> DispatcherSPtr;
@@ -318,6 +319,7 @@ public:
 
     static HttpResponseSPtr logicNotFound(const std::string& path=std::string());
     static HttpResponseSPtr redirectMove(const char* path);
+    static HttpResponseSPtr redirectFound(const char* path);
     static HttpResponseSPtr httpHomePage(ErrorCode& ec, const HttpParser& hp);
 
 protected:

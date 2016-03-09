@@ -34,10 +34,17 @@ struct ExternInfo
     const char* type;
 };
 
-static ExternInfo allowedExterns[]=
+static const ExternInfo allowedExterns[]=
 {
-    {".html", "text/html; charset=utf-8"},
-    {".txt" , "text/plain; charset=utf-8"}
+    { ".txt",   "text/plain; charset=utf-8"},
+    { ".html",  "text/html; charset=utf-8"},
+    { ".js",    "text/javascript; charset=utf-8"},
+    { ".css",   "text/css; charset=utf-8"},
+
+    { ".bmp",   "image/bmp"},
+    { ".png",   "image/png"},
+    { ".jpg",   "image/jpeg"},
+    { ".jpeg",  "image/jpeg"},
 };
 
 FileRoot::FileRoot()
@@ -50,6 +57,7 @@ FileRoot::FileRoot()
 void FileRoot::rootPathSet(const boost::filesystem::path& path)
 {
     rootPath_=path;
+    //一个绝对路径，同时以 / 结尾
     assert(rootPath_.is_absolute()
         && boost::algorithm::ends_with(rootPath_.generic_wstring(), bf::path("/").generic_wstring()));
 }
@@ -62,27 +70,25 @@ HttpResponseSPtr FileRoot::get(std::string httpPath) const
     if(httpPath.back()=='/')
         httpPath += "index.html";
 
-    const ExternInfo* checked=nullptr;
-    for(auto& ext: allowedExterns)
-    {
-        if(boost::algorithm::iends_with(httpPath, ext.ex))
-        {
-            checked=&ext;
-            break;
-        }
-    }
-
-    if(checked==nullptr)
-        return nullptr;
-
     boost::system::error_code ec;
     bf::path path=bf::canonical(rootPath_/httpPath, ec);
     if(ec
         || false==boost::algorithm::starts_with(path.generic_wstring(), rootPath_.generic_wstring())
-        || false==bf::is_regular_file(path))
+    )
     {
         return nullptr;
     }
+
+    //重定向到当前目录
+    if(bf::is_directory(path))
+        return HttpDispatch::redirectMove((httpPath+'/').c_str());
+
+    if(!bf::is_regular_file(path))
+        return nullptr;
+
+    auto checked=extGet(path);
+    if(checked==nullptr)
+        return nullptr;
 
     auto const size=bf::file_size(path);
     if(size>eSizeLimited)
@@ -94,7 +100,7 @@ HttpResponseSPtr FileRoot::get(std::string httpPath) const
 
     auto ret=std::make_shared<HttpResponse>(HttpResponse::eHttpOk);
     ret->commonHeadSet("Content-Type", checked->type);
-    ret->commonHeadSet("Connection", "Close");
+    ret->commonHeadSet("Connection", "keep-alive");
 
     std::string body(static_cast<size_t>(size), '\0');
     stm.read(const_cast<char*>(body.data()), body.size());
@@ -102,6 +108,18 @@ HttpResponseSPtr FileRoot::get(std::string httpPath) const
     ret->cache();
 
     return ret;
+}
+
+const ExternInfo* FileRoot::extGet(const bf::path& path) const
+{
+    auto const& s=path.generic_string();
+    for(auto& ext: allowedExterns)
+    {
+        if(boost::algorithm::iends_with(s, ext.ex))
+            return &ext;
+    }
+
+    return nullptr;
 }
 
 }

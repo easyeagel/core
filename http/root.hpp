@@ -26,6 +26,7 @@
 namespace core
 {
 
+struct ExternInfo;
 class FileRoot: public core::SingleInstanceT<FileRoot>
 {
     FileRoot();
@@ -36,6 +37,9 @@ class FileRoot: public core::SingleInstanceT<FileRoot>
 public:
     void rootPathSet(const boost::filesystem::path& );
     HttpResponseSPtr get(std::string path) const;
+
+private:
+    const ExternInfo* extGet(const boost::filesystem::path& path) const;
 
 private:
     boost::filesystem::path rootPath_;
