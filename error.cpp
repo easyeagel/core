@@ -44,14 +44,15 @@ const std::vector<CoreError::Unit> CoreError::unitDict_
 
     {eBadStart,         "eBadStart"},
 
-    {eTimerStopping,    u8"定时器正在停止"},
-    {eNetConnectError,  u8"网络连接错误"},
-    {eLogicError,       u8"逻辑错误"},
-    {eNetProtocolError, u8"网络协议错误"},
-    {eObjectNotFound,   u8"对象不存在"},
-    {eMemberIsFound,    u8"会员已存在"},
-    {eMemberInfoDup,    u8"会员信息重复"},
-    {eMemberIsNotFound, u8"会员不存在"},
+    {eTimerStopping,        u8"定时器正在停止"},
+    {eNetConnectError,      u8"网络连接错误"},
+    {eLogicError,           u8"逻辑错误"},
+    {eNetProtocolError,     u8"网络协议错误"},
+    {eObjectNotFound,       u8"对象不存在"},
+    {eMemberIsFound,        u8"会员已存在"},
+    {eMemberInfoDup,        u8"会员信息重复"},
+    {eMemberIsNotFound,     u8"会员不存在"},
+    {ePatternReplaceFailed, u8"模式替换失败"},
 };
 
 CoreError::~CoreError()=default;

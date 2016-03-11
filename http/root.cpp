@@ -42,6 +42,7 @@ static const ExternInfo allowedExterns[]=
     { ".css",   "text/css; charset=utf-8"},
 
     { ".bmp",   "image/bmp"},
+    { ".gif",   "image/gif"},
     { ".png",   "image/png"},
     { ".jpg",   "image/jpeg"},
     { ".jpeg",  "image/jpeg"},
@@ -99,8 +100,8 @@ HttpResponseSPtr FileRoot::get(std::string httpPath) const
         return nullptr;
 
     auto ret=std::make_shared<HttpResponse>(HttpResponse::eHttpOk);
-    ret->commonHeadSet("Content-Type", checked->type);
-    ret->commonHeadSet("Connection", "keep-alive");
+    ret->commonHeadInsert(HttpHead::eContentType, checked->type);
+    ret->commonHeadInsert(HttpHead::eConnection, "keep-alive");
 
     std::string body(static_cast<size_t>(size), '\0');
     stm.read(const_cast<char*>(body.data()), body.size());

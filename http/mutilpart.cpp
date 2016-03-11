@@ -289,15 +289,16 @@ std::string MutilpartData::headCheck(ErrorCode& ecRet, const HttpParser& hp)
         return std::string();
     }
 
-    const auto& type=itr->second;
-    auto const pos=type.find("boundary=");
-    if(pos==std::string::npos)
-    {
-        ecRet=CoreError::ecMake(CoreError::eNetProtocolError, "http content-type error");
-        return std::string();
-    }
+    //const auto& type=itr->second;
+    //auto const pos=type.find("boundary=");
+    //if(pos==std::string::npos)
+    //{
+        //ecRet=CoreError::ecMake(CoreError::eNetProtocolError, "http content-type error");
+        //return std::string();
+    //}
 
-    return type.substr(pos+9);
+    //return type.substr(pos+9);
+    return std::string();
 }
 
 }

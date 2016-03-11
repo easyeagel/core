@@ -2,12 +2,14 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(coreSrc
-    sessionKVMsg.cpp sessionKVMsg.hpp
+    sessionKVMsg.cpp sessionKVMsg.hpp pattern.cpp pattern.hpp 
     message.cpp message.hpp value.cpp value.hpp config.hpp config.cpp
     kvStore.cpp base.cpp error.cpp md5sum.cpp string.cpp server.cpp
     encode.cpp pipe.cpp io.cpp service.cpp sessionPool.cpp time.cpp
     log.cpp session.cpp daemon.cpp hash.cpp tinyaes.cpp tinyaes.hpp
 
+    http/form.cpp
+    http/form.hpp
     http/file.cpp
     http/file.hpp
     http/http.cpp

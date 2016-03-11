@@ -64,7 +64,7 @@ public:
 
     void headCompleteCall(ErrorCode& ec, const HttpParser& hp) final;
     void bodyCall(ErrorCode& ec, const HttpParser& hp, const char* bt, size_t nb) final;
-    HttpResponseSPtr bodyCompleteCall(ErrorCode& ec, const HttpParser& hp) final;
+    void bodyCompleteCall(const HttpParser& hp, ResponseCall&& call) final;
 
 private:
     uint32_t fileIndex_=0;

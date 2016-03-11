@@ -28,6 +28,21 @@
 namespace core
 {
 
+const std::vector<HttpHead::Unit>&  HttpHead::dictGet()
+{
+    static const std::vector<Unit> gs
+    {
+        {eCookie,        "Cookie",         true},
+        {eSetCookie,     "Set-Cookie",     true},
+        {eContentType,   "Content-Type",   false},
+        {eContentLength, "Content-Length", false},
+        {eConnection,    "Connection",     false},
+        {eLocation,      "Location",       false},
+        {eHost,          "Host",           false},
+    };
+
+    return gs;
+}
 
 int HttpParser::on_message_begin(http_parser* )
 {
@@ -67,7 +82,7 @@ int HttpParser::on_header_value(http_parser* hp, const char* at, size_t nb)
     } else {
         self.headValue_=std::string(at, nb);
     }
-    self.headers_[std::move(self.headKey_)]=std::move(self.headValue_);
+    self.headers_[std::move(self.headKey_)].emplace_back(std::move(self.headValue_));
     return 0;
 }
 
@@ -153,7 +168,7 @@ void HttpResponse::reset(HttpStatus st)
 
 HttpMessage::HttpMessage()
 {
-    privateHead_["Content-Length"]=std::to_string(bodyCache_.size());
+    privateHead_["Content-Length"]={std::to_string(bodyCache_.size())};
 }
 
 template<typename C>
@@ -161,10 +176,13 @@ void HttpMessage::headCacheImpl(const C& c)
 {
     for(const auto& head: c)
     {
-        headCache_.append(head.first);
-        headCache_.append(": ");
-        headCache_.append(head.second);
-        headCache_.append("\r\n");
+        for(auto& v: head.second)
+        {
+            headCache_.append(head.first);
+            headCache_.append(": ");
+            headCache_.append(v);
+            headCache_.append("\r\n");
+        }
     }
 }
 
@@ -232,7 +250,7 @@ public:
         ec=CoreError::ecMake(CoreError::eLogicError);
     }
 
-    HttpResponseSPtr bodyCompleteCall(ErrorCode& , const HttpParser& hp) final
+    void bodyCompleteCall(const HttpParser& hp, ResponseCall&& call) final
     {
         if(hp.methodGet()==HTTP_GET)
         {
@@ -240,15 +258,10 @@ public:
             auto& ft=FileRoot::instance();
             auto ret=ft.get(hp.pathGet());
             if(ret)
-                return ret;
+                return call(ErrorCode(), std::move(ret));
         }
 
-        return HttpDispatch::logicNotFound(hp.pathGet());
-    }
-
-    bool isKeep() const final
-    {
-        return true;
+        return call(ErrorCode(), HttpDispatch::logicNotFound(hp.pathGet()));
     }
 };
 
@@ -268,8 +281,8 @@ HttpDispatch::HttpDispatch()
 HttpResponseSPtr HttpDispatch::httpHomePage(ErrorCode& , const HttpParser& )
 {
     auto respones=std::make_shared<HttpResponse>(HttpResponse::eHttpOk);
-    respones->commonHeadSet("Content-Type", "text/html;charset=utf-8");
-    respones->commonHeadSet("Connection", "keep-alive");
+    respones->commonHeadInsert(HttpHead::eContentType, "text/html;charset=utf-8");
+    respones->commonHeadInsert(HttpHead::eConnection, "keep-alive");
     respones->bodySet(R"HTML(
     <html>
         <head>
@@ -307,8 +320,8 @@ HttpDispatch::DispatcherSPtr HttpDispatch::create(const HttpParser& hp) const
 HttpResponseSPtr HttpDispatch::logicNotFound(const std::string& )
 {
     auto respones=std::make_shared<HttpResponse>(HttpResponse::eHttpNotFound);
-    respones->commonHeadSet("Content-Type", "text/html;charset=utf-8");
-    respones->commonHeadSet("Connection", "keep-alive");
+    respones->commonHeadInsert(HttpHead::eContentType, "text/html;charset=utf-8");
+    respones->commonHeadInsert(HttpHead::eConnection, "keep-alive");
     respones->bodySet(R"HTML(
     <html>
         <head>
@@ -328,8 +341,8 @@ HttpResponseSPtr HttpDispatch::logicNotFound(const std::string& )
 HttpResponseSPtr HttpDispatch::redirectMove(const char* path)
 {
     auto respones=std::make_shared<HttpResponse>(HttpResponse::eHttpMove);
-    respones->commonHeadSet("Location", path);
-    respones->commonHeadSet("Connection", "keep-alive");
+    respones->commonHeadInsert(HttpHead::eLocation, path);
+    respones->commonHeadInsert(HttpHead::eConnection, "keep-alive");
     respones->cache();
 
     return respones;
@@ -338,8 +351,8 @@ HttpResponseSPtr HttpDispatch::redirectMove(const char* path)
 HttpResponseSPtr HttpDispatch::redirectFound(const char* path)
 {
     auto respones=std::make_shared<HttpResponse>(HttpResponse::eHttpFound);
-    respones->commonHeadSet("Location", path);
-    respones->commonHeadSet("Connection", "keep-alive");
+    respones->commonHeadInsert(HttpHead::eLocation, path);
+    respones->commonHeadInsert(HttpHead::eConnection, "keep-alive");
     respones->cache();
 
     return respones;

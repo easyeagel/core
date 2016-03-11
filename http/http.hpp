@@ -31,10 +31,63 @@
 namespace core
 {
 
+class HttpHead
+{
+public:
+    enum Value_t
+    {
+        eCookie,
+        eSetCookie,
+        eContentType,
+        eContentLength,
+        eConnection,
+        eLocation,
+        eHost,
+
+        eEnumCount
+    };
+
+    struct Unit
+    {
+        Value_t value;
+        const char* name;
+
+        bool multi;
+    };
+
+    static const Unit* find(Value_t val)
+    {
+        auto& d=dictGet();
+        auto const idx=static_cast<unsigned>(val);
+        if(idx>d.size())
+            return nullptr;
+
+        auto& u=d[idx];
+        assert(u.value==val);
+        if(u.value==val)
+            return std::addressof(u);
+        return nullptr;
+    }
+
+    static const Unit* find(const char* name)
+    {
+        auto& d=dictGet();
+        for(auto& u: d)
+        {
+            if(std::strcmp(u.name, name)==0)
+                return std::addressof(u);
+        }
+
+        return nullptr;
+    }
+
+    static const std::vector<Unit>&  dictGet();
+};
+
 class HttpParser
 {
 public:
-    typedef std::map<std::string, std::string> HeaderDict;
+    typedef std::map<std::string, std::vector<std::string>> HeaderDict;
     typedef std::map<std::string, std::string> StringDict;
 
     HttpParser(http_parser_type type=HTTP_BOTH);
@@ -100,14 +153,12 @@ public:
         onBody_=std::move(call);
     }
 
-
     typedef std::function<int ()> OnHeaderComplete;
     template<typename Call>
     void onHeaderComplete(Call&& call)
     {
         onHeaderComplete_=std::move(call);
     }
-
 
     const std::string& hostGet() const
     {
@@ -156,7 +207,7 @@ class CoroutineContext;
 class HttpMessage
 {
 public:
-    typedef std::map<std::string, std::string> HeaderDict;
+    typedef std::map<std::string, std::vector<std::string>> HeaderDict;
 
     HttpMessage();
 
@@ -168,40 +219,50 @@ public:
     typedef std::function<void(CoroutineContext& cc, ErrorCode& ec, HttpIOUnit& io)> BodyWriter;
     void bodyWrite(CoroutineContext& cc, ErrorCode& ec, HttpIOUnit& io) const;
 
-    void commonHeadSet(const std::string& k, const std::string& v)
+    void commonHeadInsert(HttpHead::Value_t k, const std::string& v)
     {
-        commonHead_[k]=v;
+        auto u=HttpHead::find(k);
+        assert(u);
+        if(u->multi)
+            commonHead_[u->name].emplace_back(v);
+        else
+            commonHead_[u->name]={v};
     }
 
-    void privateHeadSet(const std::string& k, const std::string& v)
+    void privateHeadInsert(HttpHead::Value_t k, const std::string& v)
     {
-        commonHead_[k]=v;
+        auto u=HttpHead::find(k);
+        assert(u);
+        if(u->multi)
+            privateHead_[u->name].emplace_back(v);
+        else
+            privateHead_[u->name]={v};
     }
 
     void bodySet(const std::string& s)
     {
         bodyCache_=s;
-        privateHead_["Content-Length"]=std::to_string(bodyCache_.size());
+        privateHead_["Content-Length"]={std::to_string(bodyCache_.size())};
     }
 
     void bodySet(const std::string& s, const std::string& type)
     {
         bodyCache_=s;
-        privateHead_["Content-Type"]=type;
-        privateHead_["Content-Length"]=std::to_string(bodyCache_.size());
+        privateHead_["Content-Type"]={type};
+        privateHead_["Content-Length"]={std::to_string(bodyCache_.size())};
     }
 
     void bodySet(std::string&& s)
     {
         bodyCache_=std::move(s);
-        privateHead_["Content-Length"]=std::to_string(bodyCache_.size());
+        privateHead_["Content-Length"]={std::to_string(bodyCache_.size())};
     }
 
     void bodySet(std::string&& s, const std::string& type)
     {
         bodyCache_=std::move(s);
-        privateHead_["Content-Type"]=type;
-        privateHead_["Content-Length"]=std::to_string(bodyCache_.size());
+        privateHead_["Content-Type"]={type};
+        privateHead_["Content-Length"]={std::to_string(bodyCache_.size())};
     }
 
     const std::string& bodyGet() const
@@ -295,11 +356,14 @@ public:
     public:
         virtual void headCompleteCall(ErrorCode& ec, const HttpParser& hp) =0;
         virtual void bodyCall(ErrorCode& ec, const HttpParser& hp, const char* b, size_t nb) =0;
-        virtual HttpResponseSPtr bodyCompleteCall(ErrorCode& ec, const HttpParser& hp) =0;
+
+        typedef std::function<void (const ErrorCode& ec, HttpResponseSPtr&& respones)> ResponseCall;
+
+        virtual void bodyCompleteCall(const HttpParser& hp, ResponseCall&& ) =0;
 
         virtual bool isKeep() const
         {
-            return false;
+            return true;
         }
 
         virtual ~Dispatcher();

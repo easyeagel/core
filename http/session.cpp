@@ -77,7 +77,19 @@ void HttpSSession::loop()
 
         if(this->dispatch_)
         {
-            auto respones=this->dispatch_->bodyCompleteCall(this->ecGet(), this->httpParser_);
+            HttpResponseSPtr respones;
+            coroutine_.yield([this, &respones]()
+                {
+                    this->dispatch_->bodyCompleteCall(this->httpParser_, [this, &respones](const ErrorCode& ec, HttpResponseSPtr&& sptr)
+                        {
+                            this->ecSet(ec);
+                            respones=std::move(sptr);
+                            coroutine_.resume();
+                        }
+                    );
+                }
+            );
+
             if(this->bad() || !respones)
                 return;
 
@@ -116,8 +128,8 @@ std::string& HttpCSession::urlGet(core::CoroutineContext& cc, const std::string&
     http_parser_parse_url(url.c_str(), url.size(), 1, &token);
 
     httpRequest_.reset(HTTP_GET, url.substr(token.field_data[UF_PATH].off));
-    httpRequest_.commonHeadSet("Host", url.substr(token.field_data[UF_HOST].off, token.field_data[UF_HOST].len));
-    httpRequest_.commonHeadSet("Connection", "Keep-Alive");
+    httpRequest_.commonHeadInsert(HttpHead::eHost, url.substr(token.field_data[UF_HOST].off, token.field_data[UF_HOST].len));
+    httpRequest_.commonHeadInsert(HttpHead::eConnection, "Keep-Alive");
 
     httpRequest_.cache();
 
