@@ -1,4 +1,4 @@
-//  Copyright [2016] <lgb (LiuGuangBao)>
+﻿//  Copyright [2016] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  cookie.cpp
@@ -16,6 +16,7 @@
 //=====================================================================================
 //
 
+#include<vector>
 #include<core/string.hpp>
 #include<core/http/cookie.hpp>
 #include<boost/algorithm/string/trim.hpp>

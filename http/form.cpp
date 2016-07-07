@@ -1,4 +1,4 @@
-//  Copyright [2016] <lgb (LiuGuangBao)>
+﻿//  Copyright [2016] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  form.cpp
@@ -16,6 +16,8 @@
 //=====================================================================================
 //
 
+#include<vector>
+#include<string>
 #include<core/http/form.hpp>
 #include<boost/algorithm/string/trim.hpp>
 #include<boost/algorithm/string/split.hpp>

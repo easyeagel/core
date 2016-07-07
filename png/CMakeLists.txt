@@ -1,7 +1,7 @@
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/scripts/pnglibconf.h.prebuilt
                ${CMAKE_CONFIGURATION_HEADER_DIR}/pnglibconf.h)
-           include_directories(${CMAKE_CONFIGURATION_HEADER_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CoreDir}/zlib)
+include_directories(${CMAKE_CONFIGURATION_HEADER_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CoreDir}/zlib)
 
 # OUR SOURCES
 set(libpng_public_hdrs

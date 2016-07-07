@@ -20,12 +20,13 @@
 #include<functional>
 
 #include<boost/optional.hpp>
-#include<boost/asio/strand.hpp>
 #include<boost/asio/spawn.hpp>
+#include<boost/asio/strand.hpp>
 #include<boost/thread/thread.hpp>
 #include<boost/asio/io_service.hpp>
 #include<boost/system/error_code.hpp>
 #include<boost/asio/steady_timer.hpp>
+#include<boost/coroutine/asymmetric_coroutine.hpp>
 
 #include"thread.hpp"
 

@@ -19,6 +19,7 @@
 #pragma once
 
 #include"io.hpp"
+#include"log.hpp"
 #include"error.hpp"
 #include"server.hpp"
 #include"sessionPool.hpp"
@@ -61,6 +62,11 @@ public:
     virtual void stop (CallFun fun) =0;
     virtual void run  (CallFun fun) =0;
     virtual void pause(CallFun fun) =0;
+
+    virtual const char* serviceName() const
+    {
+        return "notService";
+    }
 
     void funCall()
     {
@@ -107,14 +113,26 @@ public:
         status_=st;
     }
 
+    Logger& serviceLogGet() const
+    {
+        return serviceLog_;
+    }
+
 protected:
     CallFun handle_;
     Status_t status_=eStatusUnStart;
+    mutable Logger serviceLog_;
     SteadyTimer timer_;
 };
 
 class SSession;
 class JsonNode;
+
+#define GMacroServiceLog(CppService, CppLevel) \
+    BOOST_LOG_SEV((CppService).serviceLogGet().logGet(), CppLevel) \
+            << "SV:" \
+            << (CppService).serviceName() << ':'
+
 
 //=======================================================================
 template<typename Object, typename IOUnit>
@@ -366,10 +384,19 @@ void ServiceT<Object, IOUnit>::acceptStop()
 template<typename Object, typename IOUnit>
 void ServiceT<Object, IOUnit>::connectionProcess()
 {
-    //const auto local=stream_.local_endpoint(ecGet());
-    //const auto remote=stream_.remote_endpoint(ecGet());
+    const auto local=stream_.local_endpoint(ecGet());
     if(bad())
     {
+        GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::info)
+            << "EC: " << ecReadGet().message();
+        return;
+    }
+
+    const auto remote=stream_.remote_endpoint(ecGet());
+    if(bad())
+    {
+        GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::info)
+            << "EC: " << ecReadGet().message();
         return;
     }
 
@@ -377,28 +404,37 @@ void ServiceT<Object, IOUnit>::connectionProcess()
         return;
 
     auto ptr=this->sessionStart();
-    if(!ptr)
-    {
-        stream_=Stream(IOServer::serviceFetchOne().castGet());
-        return;
-    }
-
     //为下个连接选择新IOService，如此重新分配线程或CPU
     stream_=Stream(IOServer::serviceFetchOne().castGet());
+    GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::info)
+        << ( ptr ? ptr->sessionMsgGet() : "SessionCount OverRun, Refused: ")
+        << local
+        << " <- "
+        << remote;
 }
 
 template<typename Object, typename IOUnit>
 bool ServiceT<Object, IOUnit>::safeCheck()
 {
-    ErrorCode ec;
-    const auto& radr=stream_.remote_endpoint().address();
+    //这里好像永远不出现，但是现实中出现了一个异常，似乎由这个发出的?
+    const auto& remote=stream_.remote_endpoint(ecGet());
+    if(bad())
+    {
+        GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::info)
+            << "EC: " << ecReadGet().message();
+        return false;
+    }
+
+    const auto& radr=remote.address();
     if(radr.is_v4())
     {
-        //const auto ok=SafeIPv4::check(static_cast<IPv4Adress_t>(radr.to_v4().to_ulong()), ec);
+        //const auto ok=SafeIPv4::check(static_cast<IPv4Adress_t>(radr.to_v4().to_ulong()), ecGet());
         //if(!ok)
         //{
-        //    stream_=Stream(IOServer::serviceFetchOne().castGet());
-        //    return false;
+             //GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::warning)
+                //<< "EC:" << ecReadGet().message()
+                //<< ":"   << radr.to_string();
+            //return false;
         //}
     }
 
@@ -452,5 +488,4 @@ void ServiceT<Object, IOUnit>::stop(CallFun fun)
 
 
 }
-
 

@@ -46,7 +46,6 @@ namespace core
         static constexpr const char* value=CppStr; \
     }
 
-#ifndef _MSC_VER
 
 struct ConstString
 {
@@ -94,7 +93,6 @@ inline unsigned stringHash(Itr input, Itr end)
     return sum;
 }
 
-#endif
 
 //============================================================================================
 //实用工具
