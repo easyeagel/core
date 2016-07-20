@@ -46,7 +46,7 @@ public:
     }
 
 private:
-    void mutipartCall(const MutilpartData::PartTrait& trait, const Byte* bt, size_t nb);
+    void mutipartCall(ErrorCode& ec, const MutilpartData::PartTrait& trait, const Byte* bt, size_t nb);
 
 private:
     uint32_t times_=0;

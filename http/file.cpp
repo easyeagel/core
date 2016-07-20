@@ -17,9 +17,6 @@
 //
 
 #include<core/http/file.hpp>
-#ifdef _MSC_VER
-
-#endif
 
 namespace core
 {
@@ -36,9 +33,9 @@ void HttpFile::mutipartBody(ErrorCode& ecRet, const HttpParser& hp, const Byte* 
         }
 
         mutipart_.boundarySet(boundary_);
-        mutipart_.partCallSet([this](const MutilpartData::PartTrait& trait, const Byte* byte, size_t size)
+        mutipart_.partCallSet([this](core::ErrorCode& ec, const MutilpartData::PartTrait& trait, const Byte* byte, size_t size)
             {
-                mutipartCall(trait, byte, size);
+                mutipartCall(ec, trait, byte, size);
             }
         );
     }
@@ -47,7 +44,7 @@ void HttpFile::mutipartBody(ErrorCode& ecRet, const HttpParser& hp, const Byte* 
     mutipart_.parse(ecRet, bt, nb);
 }
 
-void HttpFile::mutipartCall(const MutilpartData::PartTrait& trait, const Byte* bt, size_t nb)
+void HttpFile::mutipartCall(core::ErrorCode& , const MutilpartData::PartTrait& trait, const Byte* bt, size_t nb)
 {
     switch(trait.stat)
     {

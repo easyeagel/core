@@ -34,34 +34,34 @@ std::string HttpCookieEle::toString()
     code+='=';
     code+=value_;
 
-    if(expires_)
-    {
-        code+=';';
-        const auto tm=*std::gmtime(&expires_);
-        char buf[64];
-        std::strftime(buf, sizeof(buf), " %a, %d %b %Y %X GMT;", &tm);
-        code+="Expires=";
-        code+=buf;
-    }
-
     if(!path_.empty())
     {
-        code+=';';
-        code+="Path=";
+        code+="; ";
+        code+="path=";
         code+=path_;
-    }
-
-    if(!domain_.empty())
-    {
-        code+=';';
-        code+="Domain=";
-        code+=domain_;
     }
 
     if(httpOnly_)
     {
-        code+=';';
-        code+="HttpOnly";
+        code+="; ";
+        code+="Httponly";
+    }
+
+    if(!domain_.empty())
+    {
+        code+="; ";
+        code+="domain=";
+        code+=domain_;
+    }
+
+    if(expires_)
+    {
+        code+="; ";
+        const auto tm=*std::gmtime(&expires_);
+        char buf[64];
+        std::strftime(buf, sizeof(buf), "%a, %d %b %Y %X GMT", &tm);
+        code+="expires=";
+        code+=buf;
     }
 
     return std::move(code);

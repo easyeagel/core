@@ -25,13 +25,23 @@
 #include<vector>
 #include<functional>
 
+#include<boost/filesystem.hpp>
+
+#include<core/thread.hpp>
+
 namespace core
 {
 
-class HtmlTemplate
+class HtmlTemplate: public core::SingleInstanceT<HtmlTemplate>
 {
+    HtmlTemplate();
+    friend class core::OnceConstructT<HtmlTemplate>;
+    typedef boost::filesystem::path Path;
+
 public:
-    static const char* pageGet();
+    const char* pageGet() const;
+
+    static void pathAdd(const Path& path);
 
     struct TableColor
     {
@@ -40,12 +50,20 @@ public:
         const char* two;
     };
 
-    static const TableColor& tableColorGet()
+    const TableColor& tableColorGet() const
     {
         static TableColor gs={"#FFBB77", "#DEDEBE", "#EFFFD7"};
         return gs;
     };
 
+    const std::string& tplGet(const Path& file) const;
+private:
+    std::string contentRead(const Path& p);
+
+private:
+    static std::vector<Path> paths_;
+    std::string zero_;
+    std::map<Path, std::string> tplDict_;
 };
 
 namespace html
@@ -240,5 +258,4 @@ private:
 
 
 }
-
 

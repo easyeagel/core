@@ -33,10 +33,15 @@ class FileRoot: public core::SingleInstanceT<FileRoot>
     friend class core::OnceConstructT<FileRoot>;
 
     //最大不超过2M
-    enum {eSizeLimited=1024*1024*2};
+    enum { eSizeLimited=1024*1024*2 };
 public:
     void rootPathSet(const boost::filesystem::path& );
     HttpResponseSPtr get(std::string path) const;
+
+    const boost::filesystem::path& rootPathGet() const
+    {
+        return rootPath_;
+    }
 
 private:
     const ExternInfo* extGet(const boost::filesystem::path& path) const;

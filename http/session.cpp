@@ -97,7 +97,10 @@ void HttpSSession::loop()
         }
 
         if(this->httpParser_.isKeep() && this->dispatch_->isKeep())
+        {
+            this->httpParser_.reset();
             continue;
+        }
 
         return;
     }

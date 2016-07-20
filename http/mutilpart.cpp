@@ -26,7 +26,7 @@
 namespace core
 {
 
-void MutilpartData::parse(ErrorCode& , const Byte* bt, size_t size)
+void MutilpartData::parse(ErrorCode& ec, const Byte* bt, size_t size)
 {
     for(auto const end=bt+size; bt<end;)
     {
@@ -123,7 +123,9 @@ void MutilpartData::parse(ErrorCode& , const Byte* bt, size_t size)
                         {
                             infoParse();
                             trait_.stat=eStatusStart;
-                            partCall_(trait_, nullptr, 0);
+                            partCall_(ec, trait_, nullptr, 0);
+                            if(ec.bad())
+                                return;
 
                             boundaryCache_.clear();
                             pstatus_=ePStatusMatchFailed;
@@ -143,13 +145,19 @@ void MutilpartData::parse(ErrorCode& , const Byte* bt, size_t size)
 
                 if(!boundaryCache_.empty())
                 {
-                    partCall_(trait_, reinterpret_cast<const Byte*>(boundaryCache_.data()), boundaryCache_.size());
+                    partCall_(ec, trait_, reinterpret_cast<const Byte*>(boundaryCache_.data()), boundaryCache_.size());
+                    if(ec.bad())
+                        return;
                     boundaryCache_.clear();
                 }
 
                 auto const n=nextLine(bt, end);
                 if(n>bt)
-                    partCall_(trait_, bt, n-bt);
+                {
+                    partCall_(ec, trait_, bt, n-bt);
+                    if(ec.bad())
+                        return;
+                }
 
                 bt=n;
                 if(bt<end)
@@ -159,7 +167,9 @@ void MutilpartData::parse(ErrorCode& , const Byte* bt, size_t size)
             case ePStatusComplete:
             {
                 trait_.stat=eStatusCompelete;
-                partCall_(trait_, nullptr, 0);
+                partCall_(ec, trait_, nullptr, 0);
+                if(ec.bad())
+                    return;
                 return;
             }
         }
@@ -289,15 +299,15 @@ std::string MutilpartData::headCheck(ErrorCode& ecRet, const HttpParser& hp)
         return std::string();
     }
 
-    //const auto& type=itr->second;
-    //auto const pos=type.find("boundary=");
-    //if(pos==std::string::npos)
-    //{
-        //ecRet=CoreError::ecMake(CoreError::eNetProtocolError, "http content-type error");
-        //return std::string();
-    //}
+    for(auto& type: itr->second)
+    {
+        auto const pos=type.find("boundary=");
+        if(pos==std::string::npos)
+            continue;
+        return type.substr(pos+9);
+    }
 
-    //return type.substr(pos+9);
+    ecRet=CoreError::ecMake(CoreError::eNetProtocolError, "http content-type error");
     return std::string();
 }
 

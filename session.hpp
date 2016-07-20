@@ -49,8 +49,6 @@ public:
     };
 };
 
-typedef uint64_t SessionID_t;
-
 class SSessionData
 {
 public:

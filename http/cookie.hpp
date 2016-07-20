@@ -33,7 +33,7 @@ public:
 
     template<typename N, typename V>
     HttpCookieEle(N&& name, V&& val)
-        :name_(std::forward<V&&>(name)), value_(std::forward<V&&>(val))
+        :name_(std::forward<N>(name)), value_(std::forward<V>(val))
     {}
 
     void fromString(const std::string& s);
@@ -100,6 +100,22 @@ public:
 
     void fromSetCookieString(const std::string& str);
     void fromCookieString(const std::string& str);
+
+    template<typename T>
+    auto find(const T& t) const
+    {
+        return eles_.find(t);
+    }
+
+    auto begin() const
+    {
+        return eles_.begin();
+    }
+
+    auto end() const
+    {
+        return eles_.end();
+    }
 
 private:
     std::map<std::string, HttpCookieEle> eles_;

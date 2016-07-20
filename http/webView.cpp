@@ -22,12 +22,52 @@
 #include<core/thread.hpp>
 #include<core/string.hpp>
 
+#include<core/http/root.hpp>
+#include<boost/filesystem/fstream.hpp>
+
 #include"webView.hpp"
 
 namespace core
 {
 
-const char* HtmlTemplate::pageGet()
+std::vector<HtmlTemplate::Path> HtmlTemplate::paths_= { "tpl", "app/tpl" };
+
+HtmlTemplate::HtmlTemplate()
+{
+    auto& fr=FileRoot::instance();
+    auto root=fr.rootPathGet();
+    for(auto& p: paths_)
+    {
+        auto const path=root/p;
+        if(!boost::filesystem::is_directory(path))
+            continue;
+
+        boost::filesystem::recursive_directory_iterator b(path), e;
+        for(; b!=e; ++b)
+        {
+            auto t=b->path();
+            if(t.extension()!=".tpl")
+                continue;
+            Path s=t.filename();
+            while(t.remove_filename()!=path)
+                s=t.filename()/s;
+            tplDict_[s]=contentRead(b->path());
+        }
+    }
+}
+
+std::string HtmlTemplate::contentRead(const Path& p)
+{
+    boost::filesystem::ifstream f(p);
+    if(!f)
+        return std::string();
+    std::istreambuf_iterator<char> b(f), e;
+    std::string ret;
+    std::copy(b, e, std::back_inserter(ret));
+    return ret;
+}
+
+const char* HtmlTemplate::pageGet() const
 {
     return R"HTMLPage(
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
@@ -182,6 +222,14 @@ ${topTail}
     )HTMLPage";
 }
 
+const std::string& HtmlTemplate::tplGet(const Path& file) const
+{
+    auto itr=tplDict_.find(file);
+    if(itr==tplDict_.end())
+        return zero_;
+    return itr->second;
+}
+
 static inline const char* skipTo(const char* ptr, char c)
 {
     while(*ptr)
@@ -193,7 +241,6 @@ static inline const char* skipTo(const char* ptr, char c)
 
     return nullptr;
 }
-
 
 std::map<std::string, WebView::ReplaceCall> WebView::replaceDict_=
 {
@@ -212,7 +259,7 @@ std::map<std::string, WebView::ReplaceCall> WebView::replaceDict_=
 std::string WebView::generate(const Unit& u)
 {
     std::string ret;
-    const char* tpl=HtmlTemplate::pageGet();
+    const char* tpl=HtmlTemplate::instance().pageGet();
     while(*tpl)
     {
         switch(*tpl)

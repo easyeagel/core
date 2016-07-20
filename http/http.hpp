@@ -27,6 +27,7 @@
 #include<core/thread.hpp>
 #include<core/error.hpp>
 #include<core/http/parser.hpp>
+#include<core/http/cookie.hpp>
 
 namespace core
 {
@@ -100,6 +101,11 @@ public:
     const std::string& urlGet() const
     {
         return url_;
+    }
+
+    const HttpCookie& cookieGet() const
+    {
+        return cookie_;
     }
 
     size_t parse(const char* buf, size_t nb);
@@ -197,6 +203,7 @@ private:
     std::string headValue_;
     std::string host_;
     HeaderDict headers_;
+    HttpCookie cookie_;
 
     OnBody onBody_;
     OnHeaderComplete onHeaderComplete_;

@@ -61,6 +61,9 @@ typedef uint16_t GameLevel_t;
 
 typedef uint32_t MessageRoomID_t;
 
+typedef uint64_t SessionID_t;
+
+
 }
 
 

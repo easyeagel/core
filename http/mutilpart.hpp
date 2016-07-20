@@ -56,7 +56,7 @@ public:
         std::map<std::string, std::string> infos;
     };
 
-    typedef std::function<void (const PartTrait& trait, const Byte* bt, size_t size)> PartCallBack;
+    typedef std::function<void (ErrorCode& ec, const PartTrait& trait, const Byte* bt, size_t size)> PartCallBack;
 
     template<typename Call>
     void partCallSet(Call&& call)

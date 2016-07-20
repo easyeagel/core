@@ -89,6 +89,13 @@ int HttpParser::on_header_value(http_parser* hp, const char* at, size_t nb)
 int HttpParser::on_headers_complete(http_parser* hp)
 {
     auto& self=get(hp);
+    const auto cookieStr=self.headers_.find("Cookie");
+    if(cookieStr!=self.headers_.end())
+    {
+        for(auto& s: cookieStr->second)
+            self.cookie_.fromCookieString(s);
+    }
+
     self.isHeadComplete_=true;
     if(self.onHeaderComplete_)
         return self.onHeaderComplete_();
