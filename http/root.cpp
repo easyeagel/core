@@ -102,6 +102,8 @@ HttpResponseSPtr FileRoot::get(std::string httpPath) const
     auto ret=std::make_shared<HttpResponse>(HttpResponse::eHttpOk);
     ret->commonHeadInsert(HttpHead::eContentType, checked->type);
     ret->commonHeadInsert(HttpHead::eConnection, "keep-alive");
+    ret->commonHeadInsert("Access-Control-Allow-Origin", "*");
+    ret->commonHeadInsert("Access-Control-Allow-Methods", "POST");
 
     std::string body(static_cast<size_t>(size), '\0');
     stm.read(const_cast<char*>(body.data()), body.size());

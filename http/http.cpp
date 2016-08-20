@@ -164,7 +164,9 @@ std::map<HttpResponse::HttpStatus, const char*> HttpResponse::gsMsgs_=
 
 HttpResponse::HttpResponse(HttpStatus st)
     :status_(st)
-{}
+{
+    defaultHeadReset();
+}
 
 void HttpResponse::reset(HttpStatus st)
 {
@@ -172,6 +174,14 @@ void HttpResponse::reset(HttpStatus st)
     HttpMessage::reset();
 }
 
+void HttpResponse::defaultHeadReset()
+{
+    this->privateHeadInsert(core::HttpHead::eConnection,  "Keep-Alive");
+
+    ///@todo 从配置文件中读取
+    this->commonHeadInsert("Access-Control-Allow-Origin", "*");
+    this->commonHeadInsert("Access-Control-Allow-Methods", "POST");
+}
 
 HttpMessage::HttpMessage()
 {

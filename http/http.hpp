@@ -236,6 +236,11 @@ public:
             commonHead_[u->name]={v};
     }
 
+    void commonHeadInsert(const std::string& k, const std::string& v)
+    {
+        commonHead_[k]={v};
+    }
+
     void privateHeadInsert(HttpHead::Value_t k, const std::string& v)
     {
         auto u=HttpHead::find(k);
@@ -317,11 +322,12 @@ public:
 
     void cache();
 
-private:
-    static std::map<HttpStatus, const char*> gsMsgs_;
+protected:
+    void defaultHeadReset();
 
 private:
     HttpStatus status_;
+    static std::map<HttpStatus, const char*> gsMsgs_;
 };
 
 class HttpRequest: public HttpMessage
