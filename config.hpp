@@ -24,6 +24,12 @@
 namespace core
 {
 
+template<typename Break>
+class KVSplit
+{
+
+};
+
 class KVConfig
 {
 public:

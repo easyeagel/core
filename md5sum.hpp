@@ -131,6 +131,13 @@ public:
         StringHex::decode(buf, buf+sizeof(buf), reinterpret_cast<char*>(digest_));
     }
 
+    static MD5Sum toObject(const std::string& s)
+    {
+        MD5Sum ret;
+        ret.fromString(s);
+        return ret;
+    }
+
 private:
 #ifndef _MSC_VER
     Byte_t digest_[16]={0};

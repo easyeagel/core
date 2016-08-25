@@ -175,7 +175,7 @@ protected:
         core::decode(readBuf_, msg);
 
         if(msg.empty())
-            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError));
+            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError, u8"空消息"));
 
         //验证消息编号
         typedef typename Msg::Key Key;
@@ -184,7 +184,7 @@ protected:
             || index.tag()!=core::SimpleValue_t::eInt
             || static_cast<uint32_t>(index.intGet())!=remoteMsgIndex_++)
         {
-            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError));
+            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError, u8"消息编号不正确"));
         }
     }
 
@@ -214,7 +214,7 @@ protected:
 
         core::decode(readBuf_, len);
         if(len>=eMaxBufSize)
-            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError));
+            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError, u8"消息过大"));
 
         if(readBuf_.size()<len)
             readBuf_.resize(len);
@@ -296,7 +296,10 @@ private:
                 if(writeContext_.bad())
                     return ecSet(writeContext_.ecReadGet());
             } else {
-                ioUnitGet().write(writeContext_, ecGet(), writeQueue_.front());
+                auto& msg=writeQueue_.front();
+                GMacroSessionLog(*this, SeverityLevel::info)
+                    << "msgSize:" << msg.size() << " msgHead: " << StringHex::encode(msg.substr(0, 4));
+                ioUnitGet().write(writeContext_, ecGet(), msg);
                 if(bad())
                     return;
                 writeQueue_.pop();
@@ -389,17 +392,17 @@ protected:
         Msg msg;
         core::decode(readBuf_, msg);
         if(msg.empty())
-            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError));
+            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError, u8"空消息"));
 
         typedef typename Msg::Key Key;
 
         auto& index=msg.get(Key::eMsgIndex);
         if(index.invalid() || (index.tag()!=core::SimpleValue_t::eInt))
-            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError));
+            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError, u8"消息编号不一致"));
 
         auto& sid=msg.get(Key::eSessionID);
         if(sid.invalid() || (sid.tag()!=core::SimpleValue_t::eInt64))
-            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError));
+            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError, u8"会话ID不一致"));
 
         toServiceMessageIndex_=index.intGet();
         fromServiceMessageIndex_=index.intGet();
@@ -523,7 +526,7 @@ protected:
         core::decode(readBuf_, msg);
 
         if(msg.empty())
-            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError));
+            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError, u8"空消息"));
 
         //验证消息编号
         typedef typename Msg::Key Key;
@@ -532,7 +535,7 @@ protected:
             || index.tag()!=core::SimpleValue_t::eInt
             || static_cast<uint32_t>(index.intGet())!=++fromServiceMessageIndex_)
         {
-            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError));
+            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError, u8"消息编号不一致"));
         }
     }
 
@@ -562,7 +565,7 @@ protected:
 
         core::decode(readBuf_, len);
         if(len>=eMaxBufSize)
-            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError));
+            return ecSet(CoreError::ecMake(CoreError::eNetProtocolError, u8"消息过大"));
 
         if(readBuf_.size()<len)
             readBuf_.resize(len);
@@ -644,7 +647,8 @@ private:
                 if(writeContext_.bad())
                     return ecSet(writeContext_.ecReadGet());
             } else {
-                ioUnitGet().write(writeContext_, ecGet(), writeQueue_.front());
+                auto& msg=writeQueue_.front();
+                ioUnitGet().write(writeContext_, ecGet(), msg);
                 if(bad())
                     return;
                 writeQueue_.pop();

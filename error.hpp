@@ -128,6 +128,9 @@ public:
         eMemberInfoDup, //用户信息重复
         eMemberIsNotFound,
         ePatternReplaceFailed,
+        
+        eCmdKeyTypeError, //命令键数据类型错误
+        eUnkownDevice,    //未知设备
 
         eEnumCount
     };

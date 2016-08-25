@@ -129,8 +129,10 @@ bool PGResult::next()
         if(rlt_==nullptr)
             return false;
 
+#ifndef NDEBUG
         std::cout << ::PQresStatus(::PQresultStatus(rlt_))
             << ::PQresultErrorMessage(rlt_) << std::endl;
+#endif
         if(::PQntuples(rlt_)>0)
             return true;
     }
