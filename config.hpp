@@ -47,6 +47,16 @@ public:
 
     void load(const boost::filesystem::path& file);
 
+    auto begin() const
+    {
+        return dict_.begin();
+    }
+
+    auto end() const
+    {
+        return dict_.end();
+    }
+
 private:
     Line emptyLine_;
     Dict dict_;

@@ -93,7 +93,7 @@ class ThreadLogger: public ThreadInstanceT<Logger>
 };
 
 #define GMacroThreadLog(CppLevel) \
-    BOOST_LOG_SEV(ThreadLogger::instance().logGet(), CppLevel) \
+    BOOST_LOG_SEV(core::ThreadLogger::instance().logGet(), CppLevel) \
 
 }
 

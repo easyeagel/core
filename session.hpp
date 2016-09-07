@@ -29,6 +29,7 @@
 #include<boost/asio/ip/tcp.hpp>
 #include<boost/asio/connect.hpp>
 #include<boost/asio/io_service.hpp>
+#include<boost/asio/deadline_timer.hpp>
 
 namespace core
 {
@@ -503,10 +504,12 @@ public:
 
     IOUnitT(AsyncStream&& strm)
         :stream_(std::move(strm))
+        ,readTimer_(stream_.get_io_service())
     {}
 
     IOUnitT()
         :stream_(IOGet::get().castGet())
+        ,readTimer_(IOGet::get().castGet())
     {}
 
     AsyncStream& streamGet()
@@ -544,9 +547,10 @@ public:
         stream_=AsyncStream(IOGet::get().castGet());
     }
 
-private:
+protected:
     HostAddress remote_;
     AsyncStream stream_;
+    boost::asio::deadline_timer readTimer_;
 };
 
 }
@@ -609,12 +613,78 @@ public:
         );
     }
 
+    template<typename... Args>
+    void timerRead(CoroutineContext& cc, ErrorCode& ecRet, int seconds, Args&&... args)
+    {
+        std::array<boost::asio::mutable_buffer, sizeof...(Args)> bufs{boost::asio::buffer(std::forward<Args&&>(args))...};
+        cc.yield([this, &cc, &ecRet, bufs, seconds]() mutable
+            {
+                readTimer_.expires_from_now(boost::posix_time::seconds(seconds));
+                readTimer_.async_wait([this](const boost::system::error_code& e)
+                    {
+                        if(e!=boost::asio::error::operation_aborted)
+                        { //真正超时
+                            boost::system::error_code ec;
+                            streamGet().cancel(ec);
+                        }
+                    }
+                );
+
+                boost::asio::async_read(streamGet(), bufs,[this, &cc, &ecRet](const boost::system::error_code& e, std::size_t )
+                    {
+                        //没有出错，或者真正出错，而不是超时
+                        if(!e || e!=boost::asio::error::operation_aborted)
+                        {
+                            boost::system::error_code ec;
+                            readTimer_.cancel(ec);
+                        }
+
+                        if(e)
+                            ecRet=e;
+                        cc.resume();
+                    }
+                );
+            }
+        );
+    }
+
     template<typename Handle, typename... Args>
     void read(Args&&... args, Handle&& handle)
     {
-        std::array<boost::asio::mutable_buffer, sizeof...(Args)> bufs{boost::asio::buffer(std::forward<Args&&>(args))...};
+        std::array<boost::asio::mutable_buffer, sizeof...(Args)> bufs{ boost::asio::buffer(std::forward<Args&&>(args))... };
         boost::asio::async_read(streamGet(), bufs, std::move(handle));
     }
+
+    template<typename Handle, typename... Args>
+    void timerRead(Args&&... args, Handle&& handle, int seconds)
+    {
+        readTimer_.expires_from_now(boost::posix_time::seconds(seconds));
+        readTimer_.async_wait([this](const boost::system::error_code& e)
+            {
+                if(e!=boost::asio::error::operation_aborted)
+                { //真正超时
+                    boost::system::error_code ec;
+                    streamGet().cancel(ec);
+                }
+            }
+        );
+
+        std::array<boost::asio::mutable_buffer, sizeof...(Args)> bufs{ boost::asio::buffer(std::forward<Args&&>(args))... };
+        boost::asio::async_read(streamGet(), bufs,[this, h=std::move(handle)](const boost::system::error_code& e, std::size_t nbyte)
+            {
+                //没有出错，或者真正出错，而不是超时
+                if(!e || e!=boost::asio::error::operation_aborted)
+                {
+                    boost::system::error_code ec;
+                    readTimer_.cancel(ec);
+                }
+
+                h(e, nbyte);
+            }
+        );
+    }
+
+
 
 };
 

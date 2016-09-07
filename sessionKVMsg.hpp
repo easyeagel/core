@@ -114,6 +114,9 @@ public:
     void write(Msg& msg)
     {
         typedef typename Msg::Key Key;
+        GMacroSessionLog(*this, SeverityLevel::info)
+            << "WriteMsg:" << Msg::toString(msg.cmdGet());
+
         msg.set(Key::eMsgIndex, msgIndex_++);
         msg.set(Key::eSessionID, sessionIDGet());
         write(msgToString(msg));
@@ -559,7 +562,7 @@ protected:
         if(readBuf_.size()<sizeof(len))
             readBuf_.resize(sizeof(len));
         auto& stm=ioUnitGet();
-        stm.read(readContext_, ecGet(), boost::asio::buffer(const_cast<char*>(readBuf_.data()), sizeof(len)));
+        stm.timerRead(readContext_, ecGet(), 5, boost::asio::buffer(const_cast<char*>(readBuf_.data()), sizeof(len)));
         if(bad())
             return;
 
@@ -569,7 +572,7 @@ protected:
 
         if(readBuf_.size()<len)
             readBuf_.resize(len);
-        stm.read(readContext_, ecGet(), boost::asio::buffer(const_cast<char*>(readBuf_.data()), len));
+        stm.timerRead(readContext_, ecGet(), 5, boost::asio::buffer(const_cast<char*>(readBuf_.data()), len));
     }
 
 private:
