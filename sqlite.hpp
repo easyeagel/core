@@ -1,4 +1,4 @@
-//  Copyright [2016] <lgb (LiuGuangBao)>
+﻿//  Copyright [2016] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  sqlite.hpp
@@ -21,8 +21,9 @@
 #endif
 #include<cassert>
 #include<cstring>
-
+#include<string>
 #include<memory>
+#include<functional>
 #include<core/sqlite/sqlite3.h>
 
 namespace core
@@ -83,6 +84,7 @@ public:
     void bindText(int index, const std::string& text);
     void bindBlob(int index, const std::string& text);
     void bindInt(int index, int val);
+    void bindInt64(int index, int64_t val);
     void bindDouble(int index, double val);
     void bindNull(int index);
 

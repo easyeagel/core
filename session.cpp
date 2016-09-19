@@ -33,7 +33,10 @@ void SSession::sessionShutDown()
 }
 
 SSession::~SSession()
-{}
+{
+    GMacroSessionLog(*this, SeverityLevel::info)
+        << "ShutDown";
+}
 
 CSession::CSession()
     :BaseThis("CS")

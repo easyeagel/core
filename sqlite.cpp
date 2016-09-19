@@ -1,4 +1,4 @@
-//  Copyright [2016] <lgb (LiuGuangBao)>
+﻿//  Copyright [2016] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  sqlite.cpp
@@ -44,6 +44,11 @@ void SQLiteQuery::bindBlob(int index, const std::string& text)
 void SQLiteQuery::bindInt(int index, int val)
 {
     error_=::sqlite3_bind_int(stmt_, index, val);
+}
+
+void SQLiteQuery::bindInt64(int index, int64_t val)
+{
+    error_=::sqlite3_bind_int64(stmt_, index, val);
 }
 
 void SQLiteQuery::bindDouble(int index, double val)

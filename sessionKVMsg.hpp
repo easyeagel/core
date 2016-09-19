@@ -211,7 +211,7 @@ protected:
         if(readBuf_.size()<sizeof(len))
             readBuf_.resize(sizeof(len));
         auto& stm=ioUnitGet();
-        stm.read(readContext_, ecGet(), boost::asio::buffer(const_cast<char*>(readBuf_.data()), sizeof(len)));
+        stm.timerRead(readContext_, ecGet(), 5, boost::asio::buffer(const_cast<char*>(readBuf_.data()), sizeof(len)));
         if(bad())
             return;
 
@@ -221,7 +221,7 @@ protected:
 
         if(readBuf_.size()<len)
             readBuf_.resize(len);
-        stm.read(readContext_, ecGet(), boost::asio::buffer(const_cast<char*>(readBuf_.data()), len));
+        stm.timerRead(readContext_, ecGet(), 5, boost::asio::buffer(const_cast<char*>(readBuf_.data()), len));
     }
 
 private:
@@ -562,7 +562,7 @@ protected:
         if(readBuf_.size()<sizeof(len))
             readBuf_.resize(sizeof(len));
         auto& stm=ioUnitGet();
-        stm.timerRead(readContext_, ecGet(), 5, boost::asio::buffer(const_cast<char*>(readBuf_.data()), sizeof(len)));
+        stm.read(readContext_, ecGet(), boost::asio::buffer(const_cast<char*>(readBuf_.data()), sizeof(len)));
         if(bad())
             return;
 
@@ -572,7 +572,7 @@ protected:
 
         if(readBuf_.size()<len)
             readBuf_.resize(len);
-        stm.timerRead(readContext_, ecGet(), 5, boost::asio::buffer(const_cast<char*>(readBuf_.data()), len));
+        stm.read(readContext_, ecGet(), boost::asio::buffer(const_cast<char*>(readBuf_.data()), len));
     }
 
 private:
