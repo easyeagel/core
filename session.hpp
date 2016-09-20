@@ -356,15 +356,26 @@ void streamConnectAsync(Handle&& handle , const HostPoint& host, IOUnit& ioUnit)
 {
     typedef typename IOUnit::ResolverType Resolver;
     Resolver resolver(ioUnit.streamGet().get_io_service());
-    boost::asio::async_connect(ioUnit.streamGet(),
-        resolver.resolve({host.addressGet().toString(), host.portGet().toString()}),
-        [handle](const boost::system::error_code& ec, typename Resolver::iterator itr)
+    //域名解析等操作
+    resolver.async_resolve({host.addressGet().toString(), host.portGet().toString()},
+        [handle, &ioUnit](const boost::system::error_code& ec, auto itr)
         {
             if(ec)
                 return handle(ec);
-            if(typename Resolver::iterator()==itr)
-                return handle(core::CoreError::ecMake(core::CoreError::eNetConnectError));
-            handle(core::CoreError::ecMake(core::CoreError::eGood));
+
+            boost::asio::async_connect(ioUnit.streamGet(), itr,
+                [handle](const boost::system::error_code& ec, typename Resolver::iterator itr)
+                {
+                    if(ec)
+                        return handle(ec);
+
+                    if(typename Resolver::iterator()==itr)
+                        return handle(core::CoreError::ecMake(core::CoreError::eNetConnectError));
+
+                    handle(core::CoreError::ecMake(core::CoreError::eGood));
+                }
+            );
+
         }
     );
 }
