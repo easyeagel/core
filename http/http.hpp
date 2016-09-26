@@ -405,7 +405,7 @@ protected:
 
 class HttpDispatchDict: public SingleInstanceT<HttpDispatchDict>
 {
-    enum { eDictSize=5 };
+    enum { eDictSize=32 };
 public:
     HttpDispatch& get(http_method method)
     {

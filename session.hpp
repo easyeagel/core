@@ -355,27 +355,25 @@ template<typename IOUnit, typename Handle>
 void streamConnectAsync(Handle&& handle , const HostPoint& host, IOUnit& ioUnit)
 {
     typedef typename IOUnit::ResolverType Resolver;
+    core::ErrorCode ec;
     Resolver resolver(ioUnit.streamGet().get_io_service());
-    //域名解析等操作
-    resolver.async_resolve({host.addressGet().toString(), host.portGet().toString()},
-        [handle, &ioUnit](const boost::system::error_code& ec, auto itr)
+    auto itr=resolver.resolve({host.addressGet().toString(), host.portGet().toString()}, ec); //域名解析等操作
+    if(ec.bad())
+    {
+        ioUnit.streamGet().get_io_service().post([handle, ec](){handle(ec); });
+        return;
+    }
+
+    boost::asio::async_connect(ioUnit.streamGet(), itr,
+        [handle](const boost::system::error_code& ec, typename Resolver::iterator itr)
         {
             if(ec)
                 return handle(ec);
 
-            boost::asio::async_connect(ioUnit.streamGet(), itr,
-                [handle](const boost::system::error_code& ec, typename Resolver::iterator itr)
-                {
-                    if(ec)
-                        return handle(ec);
+            if(typename Resolver::iterator()==itr)
+                return handle(core::CoreError::ecMake(core::CoreError::eNetConnectError));
 
-                    if(typename Resolver::iterator()==itr)
-                        return handle(core::CoreError::ecMake(core::CoreError::eNetConnectError));
-
-                    handle(core::CoreError::ecMake(core::CoreError::eGood));
-                }
-            );
-
+            handle(core::CoreError::ecMake(core::CoreError::eGood));
         }
     );
 }

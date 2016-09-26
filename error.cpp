@@ -28,7 +28,9 @@ namespace core
 
 std::string ErrorCode::message() const
 {
-    return Base::message();
+    if(what_.empty())
+        return Base::message();
+    return what_ + ':' + Base::message();
 }
 
 const CoreError& CoreError::instance()

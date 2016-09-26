@@ -129,6 +129,7 @@ protected:
         {
             case HTTP_GET:
             case HTTP_POST:
+            case HTTP_OPTIONS:
                 return headMethod(HttpDispatchDict::instance().get(m));
             default:
                 return 2;

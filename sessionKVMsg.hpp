@@ -211,7 +211,7 @@ protected:
         if(readBuf_.size()<sizeof(len))
             readBuf_.resize(sizeof(len));
         auto& stm=ioUnitGet();
-        stm.timerRead(readContext_, ecGet(), 5, boost::asio::buffer(const_cast<char*>(readBuf_.data()), sizeof(len)));
+        stm.timerRead(readContext_, ecGet(), 20, boost::asio::buffer(const_cast<char*>(readBuf_.data()), sizeof(len)));
         if(bad())
             return;
 
@@ -221,7 +221,7 @@ protected:
 
         if(readBuf_.size()<len)
             readBuf_.resize(len);
-        stm.timerRead(readContext_, ecGet(), 5, boost::asio::buffer(const_cast<char*>(readBuf_.data()), len));
+        stm.timerRead(readContext_, ecGet(), 20, boost::asio::buffer(const_cast<char*>(readBuf_.data()), len));
     }
 
 private:
@@ -345,7 +345,7 @@ private:
         return gs++;
     }
 
-private:
+protected:
     //写组件
     bool writeNeedRecall_=false;
     IOService::Strand strand_;
@@ -434,8 +434,8 @@ public:
             [self, this]()
             {
                 connect(readContext_);
-                if(this->bad()) //连接出错
-                    return;
+                if(this->bad())
+                    return exitCall();
 
                 readCoro();
 
@@ -504,6 +504,12 @@ public:
         return IOService::cast(BaseThis::ioUnitGet().streamGet().get_io_service());
     }
 
+    template<typename Call>
+    void afterHandShakeCallSet(Call&& call)
+    {
+        afterHandShake_=std::move(call);
+    }
+
 protected:
     void messageRead()
     {
@@ -544,6 +550,9 @@ protected:
 
     void write(const std::string& str)
     {
+        if(this->isWriteShutDown())
+            return;
+
         strandGet().post(
             [str, this]() mutable
             {
@@ -562,7 +571,7 @@ protected:
         if(readBuf_.size()<sizeof(len))
             readBuf_.resize(sizeof(len));
         auto& stm=ioUnitGet();
-        stm.read(readContext_, ecGet(), boost::asio::buffer(const_cast<char*>(readBuf_.data()), sizeof(len)));
+        stm.timerRead(readContext_, ecGet(), 20, boost::asio::buffer(const_cast<char*>(readBuf_.data()), sizeof(len)));
         if(bad())
             return;
 
@@ -572,7 +581,7 @@ protected:
 
         if(readBuf_.size()<len)
             readBuf_.resize(len);
-        stm.read(readContext_, ecGet(), boost::asio::buffer(const_cast<char*>(readBuf_.data()), len));
+        stm.timerRead(readContext_, ecGet(), 20, boost::asio::buffer(const_cast<char*>(readBuf_.data()), len));
     }
 
 private:
@@ -587,6 +596,9 @@ private:
         objGet().handShake(readContext_);
         if(bad())
             return errCall();
+
+        if(afterHandShake_)
+            afterHandShake_();
 
         writeInit();
 
@@ -631,28 +643,37 @@ private:
         const auto& sc=scopedCall(
             [this]()
             {
-                assert(good() ? writeQueue_.empty() : true );
-                writeShutDownSet();
-                if(readNeedRecall_)
+                assert(this->good() ? writeQueue_.empty() : true );
+                this->writeShutDownSet();
+                if(this->readNeedRecall_)
                 {
-                    readNeedRecall_=false;
-                    readContext_.resume();
+                    this->readNeedRecall_=false;
+                    this->readContext_.resume();
                 }
             }
         );
+        GMacroUnUsedVar(sc);
 
-        while(condRun())
+        while(this->condRun())
         {
-            if(writeQueue_.empty())
+            assert(writeNeedRecall_==false);
+
+            while(writeQueue_.empty() && this->condRun())
             {
                 writeNeedRecall_=true;
                 writeContext_.yield();
                 if(writeContext_.bad())
-                    return ecSet(writeContext_.ecReadGet());
-            } else {
+                {
+                    this->ecSet(writeContext_.ecReadGet());
+                    return;
+                }
+            }
+
+            while(!writeQueue_.empty() && this->good())
+            {
                 auto& msg=writeQueue_.front();
                 ioUnitGet().write(writeContext_, ecGet(), msg);
-                if(bad())
+                if(this->bad())
                     return;
                 writeQueue_.pop();
             }
@@ -694,7 +715,7 @@ private:
         return gs++;
     }
 
-private:
+protected:
     //写组件
     bool writeNeedRecall_=false;
     IOService::Strand strand_;
@@ -705,6 +726,7 @@ private:
     bool readNeedRecall_=false;
     std::string readBuf_;
     CoroutineContext readContext_;
+    std::function<void()> afterHandShake_;
 
     //会话退出
     bool exitCalled_=false;
