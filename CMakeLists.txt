@@ -2,6 +2,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(coreSrc
+    os.cpp os.hpp
     deviceCode.cpp deviceCode.hpp sqlite.cpp sqlite.hpp
     sessionKVMsg.cpp sessionKVMsg.hpp pattern.cpp pattern.hpp 
     message.cpp message.hpp value.cpp value.hpp config.hpp config.cpp

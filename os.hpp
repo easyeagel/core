@@ -20,21 +20,18 @@
 #ifdef GMacroWindows
 #include<windows.h>
 #endif
+#include<string>
 #include<boost/filesystem.hpp>
 
 namespace core
 {
 
-static inline boost::filesystem::path getProgramPath()
+class OS
 {
-    boost::filesystem::path ret;
-#ifdef GMacroWindows
-    wchar_t path[1024];  
-    ::GetModuleFileNameW(NULL, path, sizeof(path));
-    ret=path;
-#endif
-    return ret;
-}
+public:
+    static boost::filesystem::path getProgramPath();
+    static boost::filesystem::path getProgramDir();
+};
 
 }
 

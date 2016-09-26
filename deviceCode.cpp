@@ -630,9 +630,8 @@ private:
 
         code_=mdc.sumGet().toString();
 
-        auto path=core::getProgramPath();
-        path.remove_filename();
-        path /= L"psh.device.code";
+        auto path=core::OS::getProgramDir();
+        path /= L"device.code";
 
         boost::filesystem::ofstream stm(path);
         if(!stm)
