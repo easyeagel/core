@@ -10,6 +10,8 @@ set(coreSrc
     encode.cpp pipe.cpp io.cpp service.cpp sessionPool.cpp time.cpp
     log.cpp session.cpp daemon.cpp hash.cpp tinyaes.cpp tinyaes.hpp
 
+    http/view.cpp
+    http/view.hpp
     http/form.cpp
     http/form.hpp
     http/file.cpp
