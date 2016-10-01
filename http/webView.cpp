@@ -30,7 +30,7 @@
 namespace core
 {
 
-std::vector<HtmlTemplate::Path> HtmlTemplate::paths_= { "tpl", "app/tpl" };
+std::vector<HtmlTemplate::Path> HtmlTemplate::paths_= { "tpl", "app/tpl" , "common/tpl"};
 
 HtmlTemplate::HtmlTemplate()
 {

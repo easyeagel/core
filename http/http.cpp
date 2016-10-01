@@ -44,17 +44,17 @@ const std::vector<HttpHead::Unit>&  HttpHead::dictGet()
     return gs;
 }
 
-int HttpParser::on_message_begin(http_parser* )
+int HttpParser::on_message_begin(http::http_parser* )
 {
     return 0;
 }
 
-int HttpParser::on_status(http_parser* , const char* , size_t )
+int HttpParser::on_status(http::http_parser* , const char* , size_t )
 {
     return 0;
 }
 
-int HttpParser::on_url(http_parser* hp, const char* at, size_t nb)
+int HttpParser::on_url(http::http_parser* hp, const char* at, size_t nb)
 {
     auto& self=get(hp);
     self.url_=std::string(at, nb);
@@ -62,18 +62,18 @@ int HttpParser::on_url(http_parser* hp, const char* at, size_t nb)
     if(ret!=0)
         return ret;
 
-    const auto& s=self.urls_.field_data[UF_PATH];
+    const auto& s=self.urls_.field_data[http::UF_PATH];
     self.urlPath_=self.url_.substr(s.off, s.len);
     return 0;
 }
 
-int HttpParser::on_header_field(http_parser* hp, const char* at, size_t nb)
+int HttpParser::on_header_field(http::http_parser* hp, const char* at, size_t nb)
 {
     get(hp).headKey_=std::string(at, nb);
     return 0;
 }
 
-int HttpParser::on_header_value(http_parser* hp, const char* at, size_t nb)
+int HttpParser::on_header_value(http::http_parser* hp, const char* at, size_t nb)
 {
     auto& self=get(hp);
     if(self.headKey_=="Host")
@@ -86,7 +86,7 @@ int HttpParser::on_header_value(http_parser* hp, const char* at, size_t nb)
     return 0;
 }
 
-int HttpParser::on_headers_complete(http_parser* hp)
+int HttpParser::on_headers_complete(http::http_parser* hp)
 {
     auto& self=get(hp);
     const auto cookieStr=self.headers_.find("Cookie");
@@ -102,7 +102,7 @@ int HttpParser::on_headers_complete(http_parser* hp)
     return 0;
 }
 
-int HttpParser::on_body(http_parser* hp, const char* b, size_t n)
+int HttpParser::on_body(http::http_parser* hp, const char* b, size_t n)
 {
     auto& self=get(hp);
     if(self.onBody_)
@@ -110,14 +110,14 @@ int HttpParser::on_body(http_parser* hp, const char* b, size_t n)
     return 0;
 }
 
-int HttpParser::on_message_complete(http_parser* hp)
+int HttpParser::on_message_complete(http::http_parser* hp)
 {
     auto& self=get(hp);
     self.isMessageComplete_=true;
     return 0;
 }
 
-HttpParser::HttpParser(http_parser_type type)
+HttpParser::HttpParser(http::http_parser_type type)
     :isHeadComplete_(false)
     ,isMessageComplete_(false)
     ,type_(type)
@@ -269,7 +269,7 @@ public:
 
     void bodyCompleteCall(const HttpParser& hp, ResponseCall&& call) final
     {
-        if(hp.methodGet()==HTTP_GET)
+        if(hp.methodGet()==http::HTTP_GET)
         {
             //首先在FileRoot内找，否则就不存在
             auto& ft=FileRoot::instance();

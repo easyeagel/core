@@ -57,6 +57,7 @@ const std::vector<CoreError::Unit> CoreError::unitDict_
     { ePatternReplaceFailed, u8"模式替换失败"},
     { eCmdKeyTypeError,      u8"命令键数据类型错误"},
     { eUnkownDevice,         u8"未知设备"},
+    { eUnkownCommand,        u8"未知命令"},
 };
 
 CoreError::~CoreError()=default;

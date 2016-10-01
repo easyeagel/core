@@ -127,9 +127,9 @@ protected:
         const auto m=httpParser_.methodGet();
         switch(m)
         {
-            case HTTP_GET:
-            case HTTP_POST:
-            case HTTP_OPTIONS:
+            case http::HTTP_GET:
+            case http::HTTP_POST:
+            case http::HTTP_OPTIONS:
                 return headMethod(HttpDispatchDict::instance().get(m));
             default:
                 return 2;

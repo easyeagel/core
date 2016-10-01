@@ -32,6 +32,10 @@
 
 #include<core/gccWaringDisable.hpp>
 
+namespace http
+{
+
+
 #ifndef ULLONG_MAX
 # define ULLONG_MAX ((uint64_t) -1) /* 2^64-1 */
 #endif
@@ -2414,5 +2418,5 @@ http_parser_version(void) {
          HTTP_PARSER_VERSION_PATCH * 0x00001;
 }
 
-
+}
 

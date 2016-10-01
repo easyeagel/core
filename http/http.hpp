@@ -91,7 +91,7 @@ public:
     typedef std::map<std::string, std::vector<std::string>> HeaderDict;
     typedef std::map<std::string, std::string> StringDict;
 
-    HttpParser(http_parser_type type=HTTP_BOTH);
+    HttpParser(http::http_parser_type type=http::HTTP_BOTH);
 
     const HeaderDict& headGet() const
     {
@@ -137,9 +137,9 @@ public:
 
     void reset();
 
-    http_method methodGet() const
+    http::http_method methodGet() const
     {
-        return static_cast<http_method>(parser_.method);
+        return static_cast<http::http_method>(parser_.method);
     }
 
     int statusGet() const
@@ -172,16 +172,16 @@ public:
     }
 
 private:
-    static int on_message_begin(http_parser* );
-    static int on_status(http_parser* , const char* , size_t ) ;
-    static int on_url(http_parser* hp, const char* at, size_t nb) ;
-    static int on_header_field(http_parser* hp, const char* at, size_t nb) ;
-    static int on_header_value(http_parser* hp, const char* at, size_t nb) ;
-    static int on_headers_complete(http_parser* );
-    static int on_body(http_parser* , const char* , size_t ) ;
-    static int on_message_complete(http_parser* );
+    static int on_message_begin(http::http_parser* );
+    static int on_status(http::http_parser* , const char* , size_t ) ;
+    static int on_url(http::http_parser* hp, const char* at, size_t nb) ;
+    static int on_header_field(http::http_parser* hp, const char* at, size_t nb) ;
+    static int on_header_value(http::http_parser* hp, const char* at, size_t nb) ;
+    static int on_headers_complete(http::http_parser* );
+    static int on_body(http::http_parser* , const char* , size_t ) ;
+    static int on_message_complete(http::http_parser* );
 
-    static HttpParser& get(http_parser* hp)
+    static HttpParser& get(http::http_parser* hp)
     {
         return *static_cast<HttpParser*>(hp->data);
     }
@@ -190,12 +190,12 @@ private:
     bool isHeadComplete_    : 1;
     bool isMessageComplete_ : 1;
 
-    http_parser parser_;
-    http_parser_type type_;
-    http_parser_settings settings_;
+    http::http_parser parser_;
+    http::http_parser_type type_;
+    http::http_parser_settings settings_;
 
     std::string url_;
-    http_parser_url urls_;
+    http::http_parser_url urls_;
     std::string urlPath_;
     StringDict urlDict_;
 
@@ -333,7 +333,7 @@ private:
 class HttpRequest: public HttpMessage
 {
 public:
-    typedef http_method HttpMethod;
+    typedef http::http_method HttpMethod;
     HttpRequest(HttpMethod method);
     HttpRequest(HttpMethod method, const std::string& path);
 
@@ -407,7 +407,7 @@ class HttpDispatchDict: public SingleInstanceT<HttpDispatchDict>
 {
     enum { eDictSize=32 };
 public:
-    HttpDispatch& get(http_method method)
+    HttpDispatch& get(http::http_method method)
     {
         return dict_[method];
     }

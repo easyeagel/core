@@ -1,4 +1,4 @@
-//  Copyright [2016] <lgb (LiuGuangBao)>
+﻿//  Copyright [2016] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  view.cpp

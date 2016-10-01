@@ -1,4 +1,4 @@
-//  Copyright [2016] <lgb (LiuGuangBao)>
+﻿//  Copyright [2016] <lgb (LiuGuangBao)>
 //=====================================================================================
 //
 //      Filename:  view.hpp
@@ -22,9 +22,23 @@
 
 #include<string>
 #include<sstream>
+#include<boost/lexical_cast.hpp>
 
 namespace core
 {
+
+struct Html
+{
+    template<typename T>
+    static std::string strong(const T& t)
+    {
+        std::ostringstream stm;
+        stm << "<strong>"
+            << t
+            << "</strong>";
+        return stm.str();
+    }
+};
 
 class HtmlBlockView
 {
@@ -85,8 +99,7 @@ public:
         assert(sizeof...(Args)==columnCount_);
 
         lineStart();
-        columnAppend(std::forward<Args>(args)...);
-        columnIndex_ += columnCount_;
+        columnAdd(std::forward<Args>(args)...);
         lineClose();
     }
 
@@ -97,7 +110,6 @@ public:
         if(colBreak)
             lineStart();
         columnAdd(std::forward<Arg>(arg));
-        columnIndex_ += 1;
     }
 
 private:
@@ -107,10 +119,12 @@ private:
     void columnAdd(Arg&& arg, Args&&... args)
     {
         contentGet()
-            << "<td>"
+            << "<td class=\"tdIndex" << columnIndex_%columnCount_ << "\">"
             << arg
             << "</td>"
         ;
+
+        columnIndex_ += 1;
 
         columnAdd(std::forward<Args>(args)...);
     }
@@ -129,6 +143,44 @@ protected:
     int lineCount_=0;
     int columnIndex_=0;
     const int columnCount_=0;
+};
+
+class HtmlStatusTableView: public HtmlTableView
+{
+public:
+    using HtmlTableView::HtmlTableView;
+
+    void statusLineStart()
+    {
+        contentGet()
+            << "<div class=\"statusLine\">"
+        ;
+    }
+
+    template<typename K, typename T>
+    void statusPush(const K& k, const T& t)
+    {
+        status_.emplace_back(
+            boost::lexical_cast<std::string>(k), boost::lexical_cast<std::string>(t)
+        );
+    }
+
+    void statusLineEnd()
+    {
+        contentGet() << "<ul>";
+        for(auto& st: status_)
+        {
+            contentGet()
+                << "<li>"
+                << st.first << ": " << Html::strong(st.second)
+                << "<li>"
+            ;
+        }
+        contentGet() << "</ul></div>";
+    }
+
+private:
+    std::vector<std::pair<std::string, std::string>> status_;
 };
 
 class HtmlFormatedView: public HtmlBlockView

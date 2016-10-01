@@ -113,7 +113,7 @@ void HttpSSession::sessionShutDown()
 }
 
 HttpCSession::HttpCSession()
-    :httpRequest_(HTTP_GET)
+    :httpRequest_(http::HTTP_GET)
 {
     httpParser_.onBody([this](const char* b, size_t n)
         {
@@ -127,11 +127,11 @@ std::string& HttpCSession::urlGet(core::CoroutineContext& cc, const std::string&
     GMacroSessionLog(*this, core::SeverityLevel::info)
         << "urlGet:" << url;
 
-    http_parser_url token;
-    http_parser_parse_url(url.c_str(), url.size(), 1, &token);
+    http::http_parser_url token;
+    http::http_parser_parse_url(url.c_str(), url.size(), 1, &token);
 
-    httpRequest_.reset(HTTP_GET, url.substr(token.field_data[UF_PATH].off));
-    httpRequest_.commonHeadInsert(HttpHead::eHost, url.substr(token.field_data[UF_HOST].off, token.field_data[UF_HOST].len));
+    httpRequest_.reset(http::HTTP_GET, url.substr(token.field_data[http::UF_PATH].off));
+    httpRequest_.commonHeadInsert(HttpHead::eHost, url.substr(token.field_data[http::UF_HOST].off, token.field_data[http::UF_HOST].len));
     httpRequest_.commonHeadInsert(HttpHead::eConnection, "Keep-Alive");
 
     httpRequest_.cache();

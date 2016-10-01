@@ -131,6 +131,7 @@ public:
         
         eCmdKeyTypeError, //命令键数据类型错误
         eUnkownDevice,    //未知设备
+        eUnkownCommand,
 
         eEnumCount
     };
