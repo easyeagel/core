@@ -45,6 +45,11 @@ public:
         return itr->second;
     }
 
+    void set(const std::string& k, const Line& line)
+    {
+        dict_[k]=line;
+    }
+
     void load(const boost::filesystem::path& file);
 
     auto begin() const
