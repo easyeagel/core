@@ -30,6 +30,8 @@ KVConfig::KVConfig()=default;
 
 void KVConfig::load(const boost::filesystem::path& file)
 {
+    Lock lock(mutex_);
+
     boost::filesystem::ifstream stm(file);
     if(!stm)
         return;

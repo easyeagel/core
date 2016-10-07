@@ -19,6 +19,7 @@
 #include<map>
 #include<string>
 #include<vector>
+#include<core/thread.hpp>
 #include<boost/filesystem.hpp>
 
 namespace core
@@ -32,6 +33,7 @@ class KVSplit
 
 class KVConfig
 {
+    typedef boost::lock_guard<boost::mutex> Lock;
 public:
     KVConfig();
     typedef std::vector<std::string> Line;
@@ -39,6 +41,8 @@ public:
 
     const Line& get(const std::string& k) const
     {
+        Lock lock(mutex_);
+
         const auto itr=dict_.find(k);
         if(itr==dict_.end())
             return emptyLine_;
@@ -47,24 +51,25 @@ public:
 
     void set(const std::string& k, const Line& line)
     {
+        Lock lock(mutex_);
         dict_[k]=line;
     }
 
     void load(const boost::filesystem::path& file);
 
-    auto begin() const
+    template<typename Call>
+    void foreach(Call&& call) const
     {
-        return dict_.begin();
-    }
-
-    auto end() const
-    {
-        return dict_.end();
+        Lock lock(mutex_);
+        for(auto& kv: dict_)
+            call(kv);
     }
 
 private:
     Line emptyLine_;
     Dict dict_;
+
+    mutable boost::mutex mutex_;
 };
 
 }
