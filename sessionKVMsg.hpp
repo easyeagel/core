@@ -603,7 +603,10 @@ private:
             return errCall();
 
         if(afterHandShake_)
+        {
             afterHandShake_();
+            afterHandShake_=nullptr;
+        }
 
         writeInit();
 
@@ -707,6 +710,10 @@ private:
                     auto tmp(std::move(fun));
                     tmp();
                 }
+
+                //回调里可能有自身的指针
+                if(afterHandShake_)
+                    afterHandShake_=nullptr;
 
                 exitCalls_.clear();
                 exitCalled_=true;

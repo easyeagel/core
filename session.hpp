@@ -28,7 +28,9 @@
 #include<boost/asio/write.hpp>
 #include<boost/asio/ip/tcp.hpp>
 #include<boost/asio/connect.hpp>
+#include<boost/asio/streambuf.hpp>
 #include<boost/asio/io_service.hpp>
+#include<boost/asio/read_until.hpp>
 #include<boost/asio/deadline_timer.hpp>
 
 namespace core
@@ -693,8 +695,45 @@ public:
         );
     }
 
+    template<typename Cond, typename Handle>
+    void readUntil(boost::asio::streambuf& buf, Cond&& cond, Handle&& handle)
+    {
+        boost::asio::async_read_until(streamGet(), buf, std::move(cond), std::move(handle));
+    }
 
+    template<typename Cond>
+    void readUntil(CoroutineContext& cc, ErrorCode& ecRet, boost::asio::streambuf& buf, Cond&& cond)
+    {
+        cc.yield([&, this]()
+            {
+                readUntil(buf, std::move(cond),
+                    [&, this](const boost::system::error_code& ec, size_t )
+                    {
+                        if(ec)
+                            ecRet=ec;
+                        cc.resume();
+                    }
+                );
+            }
+        );
+    }
 
+    template<typename... Args>
+    void readSome(CoroutineContext& cc, ErrorCode& ecRet, size_t& szRet, Args&&... args)
+    {
+        cc.yield([&]()
+            {
+                streamGet().async_read_some(std::forward<Args&&>(args)..., [&](const boost::system::error_code& ec, size_t sz)
+                    {
+                        if(ec)
+                            ecRet=ec;
+                        szRet=sz;
+                        cc.resume();
+                    }
+                );
+            }
+        );
+    }
 };
 
 }

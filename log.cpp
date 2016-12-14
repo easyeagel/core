@@ -23,6 +23,8 @@
 #include"string.hpp"
 
 #include<cassert>
+
+#include<string>
 #include<ostream>
 #include<iterator>
 
@@ -102,7 +104,8 @@ public:
         logging::add_common_attributes();
 
         const std::streamsize oneSize=512*1024*1024;
-        sinkPtr_.reset(new FileSink( keywords::file_name = prefix + "%Y%m%d%H%M%S.log"
+        const std::string path=prefix + "%Y%m%d%H%M%S.log";
+        sinkPtr_.reset(new FileSink( keywords::file_name = path
             , keywords::rotation_size = oneSize));
         sinkPtr_->set_formatter(
             expr::format("%1%:%2%:%3%:%4% %5%")
@@ -175,7 +178,8 @@ GlobalLogInit::GlobalLogInit()
                 return;
             }
 
-            BoostLog::logginInit(dir_ + '/' + prefix_);
+            const auto path=dir_ + '/' + prefix_;
+            BoostLog::logginInit(path);
         }
     };
 
@@ -188,6 +192,7 @@ void GlobalLogInit::init(const std::string& dir, const std::string& prefix)
     prefix_=prefix;
     if(bf::exists(dir))
         return;
+
     auto ok=bf::create_directories(dir);
     if(!ok)
     {

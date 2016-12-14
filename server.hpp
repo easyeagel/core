@@ -18,6 +18,8 @@
 #pragma once
 
 #include<functional>
+#define BOOST_COROUTINES_NO_DEPRECATION_WARNING 1
+#define BOOST_COROUTINE_NO_DEPRECATION_WARNING 1
 
 #include<boost/optional.hpp>
 #include<boost/asio/spawn.hpp>
@@ -478,8 +480,7 @@ public:
         spawn(ios.castGet(), std::move(handle));
     }
 
-    template<typename Handler>
-    void spawn(boost::asio::io_service& ios, Handler&& handle)
+    void spawn(boost::asio::io_service& ios, CallFun handle)
     {
         ios.post(
             [this, &ios, handle]()
@@ -489,8 +490,7 @@ public:
         );
     }
 
-    template<typename Handler>
-    void start(Handler&& handle)
+    void start(CallFun handle)
     {
         resumeCall_([=]()
             {
@@ -499,8 +499,7 @@ public:
         );
     }
 
-    template<typename Handler>
-    void create(Handler&& handle)
+    void create(CallFun handle)
     {
         resumeCall_([=]()
             {
@@ -509,8 +508,7 @@ public:
         );
     }
 
-    template<typename Handler>
-    void yield(Handler&& handle)
+    void yield(CallFun handle)
     {
         yiledCall_=handle;
         yield();
@@ -552,8 +550,7 @@ public:
         push_=&caller;
     }
 
-    template<typename Handler>
-    void start(Handler&& handle, bool resumed)
+    void start(CallFun handle, bool resumed)
     {
         auto ptr = new PullType(
                 [this, handle](PushType& caller)
@@ -570,8 +567,7 @@ public:
         resume();
     }
 
-    template<typename Handler>
-    void spawnTask(boost::asio::io_service& ios, Handler&& handleIn)
+    void spawnTask(boost::asio::io_service& ios, CallFun handleIn)
     {
         start([this, &ios, handle=std::move(handleIn)]()
             {

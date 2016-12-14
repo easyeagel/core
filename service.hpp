@@ -22,6 +22,7 @@
 #include"log.hpp"
 #include"error.hpp"
 #include"server.hpp"
+#include"daemon.hpp"
 #include"sessionPool.hpp"
 
 #include<boost/asio/socket_base.hpp>
@@ -169,6 +170,8 @@ private:
     void acceptPause(CoroutineContext& yield);
     void acceptStop();
 
+    void errorRestart();
+
     void connectionProcess();
 
     bool safeCheck();
@@ -194,6 +197,9 @@ namespace core
 template<typename Object, typename IOUnit>
 void ServiceT<Object, IOUnit>::start(CallFun fun)
 {
+    GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::info)
+        << "ServiceStart:" << acceptPoint_;
+
     handle_=std::move(fun);
 
     namespace bio=boost::asio;
@@ -206,7 +212,12 @@ void ServiceT<Object, IOUnit>::start(CallFun fun)
         {
             acceptOpen();
             if(bad())
-                return;
+            {
+                GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::error)
+                    << "EC:acceptOpen:" << ecReadGet().message();
+                return errorRestart();
+            }
+
             statusSet(eStatusWorking);
             funCall();
             for(;;)
@@ -235,25 +246,24 @@ void ServiceT<Object, IOUnit>::acceptOpen()
     //打开并绑定端口
     acceptor_.open(acceptPoint_.protocol(), this->ecGet());
     if(this->bad())
-    {
-        std::cerr << "error: " << acceptPoint_ << ": " << this->ecGet().message() << std::endl;
-        return IOServer::stop();
-    }
+        return;
 
     acceptor_.set_option(bio::socket_base::reuse_address(true));
     acceptor_.bind(acceptPoint_, this->ecGet());
     if(this->bad())
-    {
-        std::cerr << "error: " << acceptPoint_ << ": " << this->ecGet().message() << std::endl;
-        return IOServer::stop();
-    }
+        return;
 
     acceptor_.listen(bio::socket_base::max_connections, this->ecGet());
     if(this->bad())
-    {
-        std::cerr << "error: " << acceptPoint_ << ": " << this->ecGet().message() << std::endl;
-        return IOServer::stop();
-    }
+        return;
+}
+
+template<typename Object, typename IOUnit>
+void ServiceT<Object, IOUnit>::errorRestart()
+{
+    std::cerr << "error: " << acceptPoint_ << ": " << this->ecGet().message() << std::endl;
+    MainExitCode::codeSet(MainExitCode::eCodeRestart);
+    return IOServer::stop();
 }
 
 template<typename Object, typename IOUnit>
@@ -272,6 +282,9 @@ void ServiceT<Object, IOUnit>::acceptCall(CoroutineContext& yield)
             if(bad())
             {
                 //出现了真正的错误，等待一段时间再作尝试
+                GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::error)
+                    << "EC:" << ecReadGet().message();
+
                 //出现真正错误后，服务状态发生改变，切换到暂停状态
                 statusSet(eStatusPausing);
                 statusSet(eStatusPaused);
@@ -302,6 +315,9 @@ void ServiceT<Object, IOUnit>::acceptCall(CoroutineContext& yield)
         case eStatusStopped:
         default:
         {
+            GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::fatal)
+                << "EC:" << GMacroWhereMsg("Bug Found.");
+
             //不可能的状态，如果出错，则一个Bug
             GMacroAbort("Never Here, Must Have a Bug.");
             return;
@@ -313,18 +329,27 @@ template<typename Object, typename IOUnit>
 void ServiceT<Object, IOUnit>::acceptWait(CoroutineContext& yield)
 {
     //每秒测试一次，直到成功
-    for(;;)
+    //或部测试次数大于 eAcceptWaitTime
+    for(int i=0; i<eAcceptWaitTime; ++i)
     {
         acceptClose();
-        timer_.expires_from_now(std::chrono::seconds(1));
+        timer_.expires_from_now(std::chrono::seconds(5));
         timer_.async_wait(yield[ecGet()]);
         ecClear();
         acceptOpen();
         if(bad())
+        {
+            GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::error)
+                << "EC:acceptOpen:" << ecReadGet().message();
             continue;
+        }
+
         statusSet(eStatusWorking);
-        break;
+        return;
     }
+
+    //尝试多次，重启当前进程
+    errorRestart();
 }
 
 template<typename Object, typename IOUnit>
@@ -345,7 +370,9 @@ void ServiceT<Object, IOUnit>::acceptPause(CoroutineContext& yield)
         funCall();
         return;
     }
-
+   
+    GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::error)
+        << "EC:acceptOpen:" << ecReadGet().message();
     acceptWait(yield);
     funCall();
 }

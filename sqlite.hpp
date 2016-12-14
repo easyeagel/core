@@ -50,6 +50,10 @@ class Error
             return !good();
         }
 
+        void errorClear()
+        {
+            error_=SQLITE_OK;
+        }
 
     protected:
         int error_=SQLITE_OK;

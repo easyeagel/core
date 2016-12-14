@@ -21,6 +21,7 @@
 #include<cassert>
 
 #include<string>
+#include<vector>
 #include<sstream>
 #include<boost/lexical_cast.hpp>
 

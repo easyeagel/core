@@ -49,6 +49,16 @@ public:
         return itr->second;
     }
 
+    const Line& get(const std::string& k, const Line& d) const
+    {
+        Lock lock(mutex_);
+
+        const auto itr=dict_.find(k);
+        if(itr==dict_.end())
+            return d;
+        return itr->second;
+    }
+
     void set(const std::string& k, const Line& line)
     {
         Lock lock(mutex_);

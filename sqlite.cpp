@@ -71,7 +71,6 @@ void SQLite::execute(const std::string& sql, ExecuteCall&& call)
 {
     ::sqlite3_stmt *stmt=nullptr;
     error_=::sqlite3_prepare_v2(db_, sql.c_str(), sql.size(), &stmt, nullptr);
-    assert(good());
     if(bad())
         return;
     sqliteStep(stmt, std::move(call));

@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(coreSrc
-    os.cpp os.hpp
+    os.cpp os.hpp cache.hpp cache.cpp
     deviceCode.cpp deviceCode.hpp sqlite.cpp sqlite.hpp
     sessionKVMsg.cpp sessionKVMsg.hpp pattern.cpp pattern.hpp 
     message.cpp message.hpp value.cpp value.hpp config.hpp config.cpp
@@ -34,7 +34,7 @@ set(coreSrc
 )
 
 if(OptLinux)
-    set(coreSrc ${coreSrc} postgresql.cpp postgresql.hpp)
+    set(coreSrc ${coreSrc} postgresql.cpp postgresql.hpp inotify.cpp inotify.hpp)
 endif()
 
 add_library(core STATIC ${coreSrc})
