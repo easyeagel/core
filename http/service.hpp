@@ -30,6 +30,11 @@ class HttpService: public core::ServiceT<HttpService, HttpIOUnit>
     typedef core::ServiceT<HttpService, HttpIOUnit> BaseThis;
 
 public:
+    const char* serviceName() const final
+    {
+        return "CoreHttpService";
+    }
+
     typedef HttpSSession SessionType;
     GMacroBaseThis(HttpService)
 

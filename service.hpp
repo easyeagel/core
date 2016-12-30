@@ -269,6 +269,10 @@ void ServiceT<Object, IOUnit>::errorRestart()
 template<typename Object, typename IOUnit>
 void ServiceT<Object, IOUnit>::acceptClose()
 {
+    GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::error)
+        << "EC:acceptClose";
+
+    stream_=Stream(IOServer::serviceFetchOne().castGet());
     acceptor_.close();
 }
 
@@ -411,28 +415,36 @@ void ServiceT<Object, IOUnit>::acceptStop()
 template<typename Object, typename IOUnit>
 void ServiceT<Object, IOUnit>::connectionProcess()
 {
-    const auto local=stream_.local_endpoint(ecGet());
-    if(bad())
+    core::ErrorCode ec;
+    const auto local=stream_.local_endpoint(ec);
+    if(ec.bad())
     {
         GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::info)
-            << "EC: " << ecReadGet().message();
+            << "EC: " << ec.message();
+        stream_=Stream(IOServer::serviceFetchOne().castGet());
         return;
     }
 
-    const auto remote=stream_.remote_endpoint(ecGet());
-    if(bad())
+    const auto remote=stream_.remote_endpoint(ec);
+    if(ec.bad())
     {
         GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::info)
-            << "EC: " << ecReadGet().message();
+            << "EC: " << ec.message();
+        stream_=Stream(IOServer::serviceFetchOne().castGet());
         return;
     }
 
     if(!safeCheck())
+    {
+        stream_=Stream(IOServer::serviceFetchOne().castGet());
         return;
+    }
 
     auto ptr=this->sessionStart();
+
     //为下个连接选择新IOService，如此重新分配线程或CPU
     stream_=Stream(IOServer::serviceFetchOne().castGet());
+
     GMacroServiceLog(static_cast<const Object&>(*this), SeverityLevel::info)
         << ( ptr ? ptr->sessionMsgGet() : "SessionCount OverRun, Refused: ")
         << local
