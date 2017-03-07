@@ -171,6 +171,11 @@ public:
         return host_;
     }
 
+    const auto& queryDict() const
+    {
+        return urlDict_;
+    }
+
 private:
     static int on_message_begin(http::http_parser* );
     static int on_status(http::http_parser* , const char* , size_t ) ;
@@ -185,6 +190,8 @@ private:
     {
         return *static_cast<HttpParser*>(hp->data);
     }
+
+    void queryParse(std::string q);
 
 private:
     bool isHeadComplete_    : 1;

@@ -22,11 +22,7 @@
 #include<string>
 #include<vector>
 #include<core/codec.hpp>
-#ifdef GMacroLinux
 #include<postgresql/libpq-fe.h>
-#else 
-#include<libpq-fe.h>
-#endif
 
 namespace core
 {

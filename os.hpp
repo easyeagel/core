@@ -17,9 +17,8 @@
 //
 
 #pragma once
-#ifdef GMacroWindows
-#include<windows.h>
-#endif
+
+#include<cstdio>
 #include<string>
 #include<boost/filesystem.hpp>
 
@@ -33,12 +32,16 @@ public:
     static boost::filesystem::path getProgramDir();
 };
 
-#ifndef WIN32
-class PregressOpen
+//popen 封装
+class ProcessOpen
 {
 public:
-    PregressOpen(const char* cmd, const char* mode)
+    ProcessOpen(const char* cmd, const char* mode)
+#ifndef WIN32
         :file_(::popen(cmd, mode))
+#else
+		:file_(::_popen(cmd, mode))
+#endif
     {}
 
     size_t read(void* buf, size_t nb)
@@ -52,18 +55,73 @@ public:
         return file_==nullptr;
     }
 
-    ~PregressOpen()
+    ~ProcessOpen()
     {
         if(file_==nullptr)
             return;
+#ifndef WIN32
         ::pclose(file_);
+#else
+		::_pclose(file_);
+#endif
         file_=nullptr;
     }
 
 private:
     FILE* file_=nullptr;
 };
-#endif
+
+//进程管理
+class Process
+{
+    struct PInfo;
+
+public:
+    Process();
+	Process(const std::string& cmd);
+    Process(Process&& other);
+    Process(const Process& other);
+
+    ~Process();
+
+    void cmd(const std::string& cmd)
+    {
+        cmd_=cmd;
+    }
+
+	Process& arg(const std::string& arg)
+	{
+		args_.push_back(arg);
+        return *this;
+	}
+
+    void start();
+	void kill();
+    int exitCode() const;
+
+    bool wait();
+    bool timedWait(uint32_t mill);
+
+    bool bad() const
+    {
+        return error_!=0;
+    }
+
+    bool good() const
+    {
+        return !bad();
+    }
+
+	int pid() const;
+
+private:
+    std::string cmd_;
+    std::vector<std::string> args_;
+
+private:
+    int error_=0;
+    std::unique_ptr<PInfo> pinfo_;
+};
 
 }
 

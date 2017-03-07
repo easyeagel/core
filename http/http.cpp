@@ -58,13 +58,54 @@ int HttpParser::on_url(http::http_parser* hp, const char* at, size_t nb)
 {
     auto& self=get(hp);
     self.url_=std::string(at, nb);
+    std::memset(&self.urls_, 0, sizeof(self.urls_));
     auto const ret=http_parser_parse_url(self.url_.data(), self.url_.size(), 0, &self.urls_);
     if(ret!=0)
         return ret;
 
     const auto& s=self.urls_.field_data[http::UF_PATH];
     self.urlPath_=self.url_.substr(s.off, s.len);
+
+    const auto& q=self.urls_.field_data[http::UF_QUERY];
+    self.queryParse(self.url_.substr(q.off, q.len));
     return 0;
+}
+
+void HttpParser::queryParse(std::string query)
+{
+    if(query.empty())
+        return;
+
+    std::string kv;
+    std::size_t pos=0;
+    bool finished=false;
+    for(;;)
+    {
+        const auto cpos=query.find('&', pos);
+        if(cpos==std::string::npos)
+        {
+            finished=true;
+            if(query[pos]=='&')
+                kv=query.substr(pos+1);
+            else
+                kv=query.substr(pos);
+        } else {
+            kv=query.substr(pos, cpos-pos);
+        }
+
+        const auto kvpos=kv.find('=');
+        if(kvpos==std::string::npos)
+        {
+            urlDict_[kv]=std::string();
+        } else {
+            urlDict_[kv.substr(0, kvpos)]=kv.substr(kvpos+1);
+        }
+
+        if(finished)
+            return;
+
+        pos=cpos+1;
+    }
 }
 
 int HttpParser::on_header_field(http::http_parser* hp, const char* at, size_t nb)
