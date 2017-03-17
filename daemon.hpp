@@ -29,8 +29,10 @@ public:
     {
         eCodeSuccess=EXIT_SUCCESS,
         eCodeFailure=EXIT_FAILURE,
-        eCodeRestart,
+
+        eCodeRestart=20170317, //一个特殊值，避免碰撞
         eCodeWait
+
     }Code_t;
 
     enum { eWaitCountLimit=1024 };
@@ -75,12 +77,11 @@ public:
     * @details 启动一个子进程作为服务进程，同时监视这个子进程资源使用
     *   如果子进程资源使用状态满足一定条件，可能需要让子进程退出
     */
-    static void start(const char* name);
-
-
+    static void start(const char* name, int& argc, const char** argv);
 
 private:
     static void watch(int pid);
+    static void exitCodeDispatch(int exitCode);
 };
 
 }

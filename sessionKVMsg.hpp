@@ -115,11 +115,6 @@ public:
     {
         typedef typename Msg::Key Key;
 
-#ifndef NDEBUG
-        GMacroSessionLog(*this, SeverityLevel::info)
-            << "WriteMsg:" << Msg::toString(msg.cmdGet());
-#endif
-
         msg.set(Key::eMsgIndex, msgIndex_++);
         msg.set(Key::eSessionID, sessionIDGet());
         write(msgToString(msg));
@@ -303,10 +298,6 @@ private:
                     return ecSet(writeContext_.ecReadGet());
             } else {
                 auto& msg=writeQueue_.front();
-#ifndef NDEBUG
-                GMacroSessionLog(*this, SeverityLevel::info)
-                    << "msgSize:" << msg.size() << " msgHead: " << StringHex::encode(msg.substr(0, 4));
-#endif
                 ioUnitGet().write(writeContext_, ecGet(), msg);
                 if(bad())
                     return;

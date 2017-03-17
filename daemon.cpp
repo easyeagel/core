@@ -26,6 +26,7 @@
 
 #include<string>
 #include<thread>
+#include<core/os.hpp>
 
 #include"time.hpp"
 #include"daemon.hpp"
@@ -44,6 +45,8 @@ static inline void daemonMsgWrite(const char* msg)
 	#if !defined(WIN32)
     ::write(STDERR_FILENO, str.data(), str.size());
     ::fsync(STDERR_FILENO);
+    #else
+    std::cerr << str << std::endl;
 	#endif
 }
 
@@ -58,10 +61,36 @@ static inline std::string daemonLogName(const char* name)
     return file;
 }
 
-void Daemon::start(const char* name)
+void Daemon::start(const char* name, int& argc, const char** argv)
 {
     GMacroUnUsedVar(name);
-#if !defined(DEBUG) && defined(NDEBUG) && !defined(WIN32)
+#ifdef WIN32
+
+    bool noDaemon=false;
+    if(std::strcmp(argv[argc-1], "--NoCoreDaemon")==0) //是子进程
+        noDaemon=true;
+    if(noDaemon==true)
+    {
+        argc -= 1;
+        argv[argc]=nullptr;
+        return;
+    }
+
+    for (;;)
+    {
+        core::Process worker(core::OS::getProgramPath().string());
+        for (int i = 1; i < argc; ++i) //不复制程序名
+            worker.arg(argv[i]);
+        worker.arg("--NoCoreDaemon");
+
+        worker.start();
+        worker.wait();
+
+        exitCodeDispatch(worker.exitCode());
+
+    }
+
+#elif !defined(DEBUG) && defined(NDEBUG)
 
     //把自己变成后台进程
     auto pid=::fork();
@@ -105,7 +134,7 @@ void Daemon::start(const char* name)
         }
     }
 
-#endif
+#endif //WIN32
 }
 
 void Daemon::watch(int pid)
@@ -118,42 +147,47 @@ void Daemon::watch(int pid)
     if(WIFEXITED(status))
     {
         int exitStat=WEXITSTATUS(status);
-        switch(exitStat)
-        {
-            case MainExitCode::eCodeFailure:
-            {
-                daemonMsgWrite("work process exit with failure, watch process exit\n");
-                std::exit(EXIT_SUCCESS);
-            }
-            case MainExitCode::eCodeSuccess:
-            {
-                daemonMsgWrite("work process exit normal, watch process exit\n");
-                std::exit(EXIT_SUCCESS);
-            }
-            case MainExitCode::eCodeRestart:
-            {
-                daemonMsgWrite("work process restart\n");
-                break;
-            }
-            case MainExitCode::eCodeWait:
-            {
-                std::string msg("work process wait resource:waitCount:");
-                msg += std::to_string(MainExitCode::waitCountGet());
-                msg += "\n";
-                daemonMsgWrite(msg.c_str());
-
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-                MainExitCode::waitCountShift();
-                break;
-            }
-            default:
-                daemonMsgWrite("work process abort, rerun it\n");
-                break;
-        }
+        exitCodeDispatch(exitStat);
     }
 
     //子进程是非正常退出，再创建子进程
 #endif
+}
+
+void Daemon::exitCodeDispatch(int exitCode)
+{
+    switch(exitCode)
+    {
+        case MainExitCode::eCodeFailure:
+        {
+            daemonMsgWrite("work process exit with failure, watch process exit\n");
+            std::exit(EXIT_FAILURE);
+        }
+        case MainExitCode::eCodeSuccess:
+        {
+            daemonMsgWrite("work process exit normal, watch process exit\n");
+            std::exit(EXIT_SUCCESS);
+        }
+        case MainExitCode::eCodeRestart:
+        {
+            daemonMsgWrite("work process restart\n");
+            break;
+        }
+        case MainExitCode::eCodeWait:
+        {
+            std::string msg("work process wait resource:waitCount:");
+            msg += std::to_string(MainExitCode::waitCountGet());
+            msg += "\n";
+            daemonMsgWrite(msg.c_str());
+
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            MainExitCode::waitCountShift();
+            break;
+        }
+        default:
+            daemonMsgWrite("work process abort, rerun it\n");
+            break;
+    }
 }
 
 
