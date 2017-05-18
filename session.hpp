@@ -641,7 +641,7 @@ public:
                     }
                 );
 
-                boost::asio::async_read(streamGet(), bufs,[this, &cc, &ecRet](const boost::system::error_code& e, std::size_t )
+                boost::asio::async_read(streamGet(), bufs, [this, &cc, &ecRet](const boost::system::error_code& e, std::size_t )
                     {
                         //没有出错，或者真正出错，而不是超时
                         if(!e || e!=boost::asio::error::operation_aborted)
@@ -734,6 +734,42 @@ public:
             }
         );
     }
+
+    template<typename... Args>
+    void timerReadSome(CoroutineContext& cc, ErrorCode& ecRet, int seconds, size_t& szRet, Args&&... args)
+    {
+        cc.yield([&]() mutable
+            {
+                readTimer_.expires_from_now(boost::posix_time::seconds(seconds));
+                readTimer_.async_wait([this](const boost::system::error_code& e)
+                    {
+                        if(e!=boost::asio::error::operation_aborted)
+                        { //真正超时
+                            boost::system::error_code ec;
+                            streamGet().cancel(ec);
+                        }
+                    }
+                );
+
+                streamGet().async_read_some(std::forward<Args&&>(args)..., [&](const boost::system::error_code& ec, size_t sz)
+                    {
+                        //没有出错，或者真正出错，而不是超时
+                        if(!ec || ec!=boost::asio::error::operation_aborted)
+                        {
+                            boost::system::error_code ec;
+                            readTimer_.cancel(ec);
+                        }
+
+                        if(ec)
+                            ecRet=ec;
+                        szRet=sz;
+                        cc.resume();
+                    }
+                );
+            }
+        );
+    }
+
 };
 
 }

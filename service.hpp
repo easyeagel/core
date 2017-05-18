@@ -63,6 +63,7 @@ public:
     virtual void stop (CallFun fun) =0;
     virtual void run  (CallFun fun) =0;
     virtual void pause(CallFun fun) =0;
+    virtual void close() = 0;
 
     virtual const char* serviceName() const
     {
@@ -161,6 +162,8 @@ public:
     void stop (CallFun fun=CallFun());
     void run  (CallFun fun=CallFun());
     void pause(CallFun fun=CallFun());
+
+    void close() final;
 
 private:
     void acceptOpen();
@@ -523,6 +526,12 @@ void ServiceT<Object, IOUnit>::stop(CallFun fun)
             acceptor_.cancel();
         }
     );
+}
+
+template<typename Object, typename IOUnit>
+void ServiceT<Object, IOUnit>::close()
+{
+    acceptor_.close();
 }
 
 

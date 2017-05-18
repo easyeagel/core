@@ -40,11 +40,11 @@ namespace md5sum
 {
 
 
-typedef MD5Compute::Byte_t md5_byte_t; /* 8-bit byte */
-typedef MD5Compute::Word_t md5_word_t; /* 32-bit word */
+typedef uint8_t md5_byte_t; /* 8-bit byte */
+typedef uint32_t md5_word_t; /* 32-bit word */
 
 /* Define the state of the MD5 Algorithm. */
-typedef MD5Compute::Status md5_state_t;
+typedef MD5Context md5_state_t;
 
 /* Initialize the algorithm. */
 static void md5_init(md5_state_t *pms);
@@ -386,58 +386,19 @@ static void md5_finish(md5_state_t *pms, md5_byte_t digest[16])
 #pragma GCC diagnostic pop
 #endif
 
-MD5Compute::MD5Compute()
+void MD5Compute::Call::init(MD5Context* ctx)
 {
-    md5sum::md5_init(&status_);
+    md5sum::md5_init(ctx);
 }
 
-void MD5Compute::reset()
+void MD5Compute::Call::update(MD5Context* ctx, const Byte_t* data, size_t nbyte)
 {
-    md5sum::md5_init(&status_);
+    md5sum::md5_append(ctx, data, nbyte);
 }
 
-void MD5Compute::append(const Byte_t* data, size_t nbyte)
+void MD5Compute::Call::finish(MD5Context* ctx, Byte_t* digest)
 {
-    md5sum::md5_append(&status_, data, nbyte);
-}
-
-void MD5Compute::finish()
-{
-    md5sum::md5_finish(&status_, sum_.digest_);
-}
-
-MD5Sum MD5Compute::streamDoit(const char* file)
-{
-    std::ifstream in(file, std::ios::binary);
-    if(!in)
-        return MD5Sum();
-
-    MD5Compute compute;
-    MD5Compute::Byte_t buffer[4*1024];
-    while(in.read(reinterpret_cast<char*>(buffer), sizeof(buffer)))
-        compute.append(buffer, static_cast<size_t>(in.gcount()));
-    compute.append(buffer, static_cast<size_t>(in.gcount()));
-    compute.finish();
-    return compute.sumGet();
-}
-
-MD5Sum MD5Compute::streamDoit(const std::vector<const char*>& files)
-{
-    MD5Compute compute;
-    MD5Compute::Byte_t buffer[4*1024];
-    for(auto file: files)
-    {
-        std::ifstream in(file, std::ios::binary);
-        if(!in)
-            return MD5Sum();
-
-        while(in.read(reinterpret_cast<char*>(buffer), sizeof(buffer)))
-            compute.append(buffer, static_cast<size_t>(in.gcount()));
-        compute.append(buffer, static_cast<size_t>(in.gcount()));
-    }
-
-    compute.finish();
-    return compute.sumGet();
+    md5sum::md5_finish(ctx, digest);
 }
 
 }

@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(coreSrc
-    os.cpp os.hpp cache.hpp cache.cpp
+    os.cpp os.hpp cache.hpp cache.cpp sha2.cpp
     deviceCode.cpp deviceCode.hpp sqlite.cpp sqlite.hpp
     sessionKVMsg.cpp sessionKVMsg.hpp pattern.cpp pattern.hpp 
     message.cpp message.hpp value.cpp value.hpp config.hpp config.cpp
@@ -47,8 +47,8 @@ set(BoostLibs
 
 if(OptWindows)
     set(BoostLibs ${BoostLibs} boost_bzip2 boost_zlib)
-    set(dsub "-vc140-mt-sgd-1_59")
-    set(rsub "-vc140-mt-s-1_59")
+    set(dsub "-vc141-mt-gd-1_64")
+    set(rsub "-vc141-mt-1_64")
 
     foreach(file ${BoostLibs})
         target_link_libraries(core debug lib${file}${dsub} optimized lib${file}${rsub})

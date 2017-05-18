@@ -21,6 +21,7 @@
 #include<cstdio>
 #include<string>
 #include<boost/filesystem.hpp>
+#undef max
 
 namespace core
 {
@@ -30,6 +31,15 @@ class OS
 public:
     static boost::filesystem::path getProgramPath();
     static boost::filesystem::path getProgramDir();
+};
+
+class StdIO
+{
+public:
+    void inReset(int fd);
+    void outReset(int fd);
+    void inReset(const char* filename);
+    void outReset(const char* filename);
 };
 
 //popen 封装
@@ -114,9 +124,23 @@ public:
 
 	int pid() const;
 
+    template<typename Call>
+    static void forkCallPush(Call&& call)
+    {
+        forkCall().push_back(std::move(call));
+    }
+
+    static int shell(const std::string& cmd, uint64_t time=std::numeric_limits<uint64_t>::max());
+
 private:
     std::string cmd_;
     std::vector<std::string> args_;
+
+    static auto& forkCall()
+    {
+        static std::vector<std::function<void ()>> gs;
+        return gs;
+    }
 
 private:
     int error_=0;

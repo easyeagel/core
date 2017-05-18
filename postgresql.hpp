@@ -21,8 +21,8 @@
 #include<map>
 #include<string>
 #include<vector>
+#include<libpq-fe.h>
 #include<core/codec.hpp>
-#include<postgresql/libpq-fe.h>
 
 namespace core
 {

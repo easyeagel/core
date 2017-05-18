@@ -20,7 +20,7 @@
 
 #include"hash.hpp"
 
-namespace mr
+namespace core
 {
 
 static inline HashResult_t SDBMHash(const char *str, const char* const end)

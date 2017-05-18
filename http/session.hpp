@@ -66,6 +66,8 @@ public:
         }
     };
 
+    enum { eReadWait=60 };
+
 protected:
     template<typename... Args>
     HttpSessionBaseT(Args&&... args)
@@ -106,20 +108,9 @@ protected:
         if(buffer_.size()<totalSize)
             buffer_.resize(totalSize);
 
+        auto& io=this->ioUnitGet();
         lastBufferSize_=0;
-        cc.yield([this, &cc]() mutable
-            {
-                this->ioUnitGet().streamGet().async_read_some(boost::asio::buffer(buffer_),
-                    [this, &cc](const boost::system::error_code& ec, size_t nb)
-                    {
-                        if(ec)
-                            this->ecSet(ec);
-                        lastBufferSize_=nb;
-                        cc.resume();
-                    }
-                );
-            }
-        );
+        io.timerReadSome(cc, this->ecGet(), eReadWait, lastBufferSize_, boost::asio::buffer(buffer_));
     }
 
     int headComplete()

@@ -34,6 +34,8 @@
 #ifndef SHA2_H
 #define SHA2_H
 
+#include<stdint.h>
+
 #define SHA224_DIGEST_SIZE ( 224 / 8)
 #define SHA256_DIGEST_SIZE ( 256 / 8)
 #define SHA384_DIGEST_SIZE ( 384 / 8)
@@ -49,7 +51,7 @@
 typedef unsigned char uint8;
 typedef unsigned int  uint32;
 
-typedef sqlite3_uint64 uint64;
+typedef uint64_t uint64;
 
 #if defined(_MSC_VER) || defined(__BORLANDC__)
   #define li_64(h) 0x##h##ui64

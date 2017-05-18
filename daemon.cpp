@@ -16,14 +16,22 @@
 //=====================================================================================
 
 
-#if !defined(WIN32)
+#ifndef WIN32
 	#include<fcntl.h>
 	#include<unistd.h>
 	#include<sys/wait.h>
 	#include<sys/stat.h>
 	#include<sys/types.h>
+#else
+	#include<fcntl.h>
+	#include<sys\types.h>
+	#include<sys\stat.h>
+	#include<io.h>
+	#include<stdio.h>
 #endif
 
+#include<cstdlib>
+#include<cstdio>
 #include<string>
 #include<thread>
 #include<core/os.hpp>
@@ -64,6 +72,11 @@ static inline std::string daemonLogName(const char* name)
 void Daemon::start(const char* name, int& argc, const char** argv)
 {
     GMacroUnUsedVar(name);
+    GMacroUnUsedVar(argc);
+    GMacroUnUsedVar(argv);
+
+#if !defined(DEBUG) && defined(NDEBUG)
+
 #ifdef WIN32
 
     bool noDaemon=false;
@@ -76,6 +89,13 @@ void Daemon::start(const char* name, int& argc, const char** argv)
         return;
     }
 
+    //把标准输出重定向到文件
+    for(int i=0; i<3; ++i)
+        ::_close(i);
+    int fd=::_open(daemonLogName(name).c_str(), _O_RDWR|_O_APPEND|_O_CREAT|_O_BINARY);
+    ::_dup(fd);
+    ::_dup(fd);
+
     for (;;)
     {
         core::Process worker(core::OS::getProgramPath().string());
@@ -87,10 +107,9 @@ void Daemon::start(const char* name, int& argc, const char** argv)
         worker.wait();
 
         exitCodeDispatch(worker.exitCode());
-
     }
 
-#elif !defined(DEBUG) && defined(NDEBUG)
+#else
 
     //把自己变成后台进程
     auto pid=::fork();
@@ -135,6 +154,7 @@ void Daemon::start(const char* name, int& argc, const char** argv)
     }
 
 #endif //WIN32
+#endif //DEBUG && !NDEBUG
 }
 
 void Daemon::watch(int pid)
@@ -185,8 +205,10 @@ void Daemon::exitCodeDispatch(int exitCode)
             break;
         }
         default:
+        {
             daemonMsgWrite("work process abort, rerun it\n");
             break;
+        }
     }
 }
 

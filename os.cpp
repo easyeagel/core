@@ -17,12 +17,16 @@
 //
 
 #ifdef WIN32
+#include<io.h>
+#include<stdio.h>
 #include<Windows.h>
 #else
 #include<signal.h>
 #include<sys/wait.h>
 #endif
 
+#include<cstdlib>
+#include<cstdio>
 #include<locale>
 #include<codecvt>
 #include<core/os.hpp>
@@ -53,6 +57,41 @@ boost::filesystem::path OS::getProgramDir()
     return getProgramPath().remove_filename();
 }
 
+void StdIO::inReset(int fd)
+{
+#ifdef WIN32
+    ::_dup2(fd, ::_fileno(stdin));
+#else
+    ::dup2(fd, ::fileno(stdin));
+#endif
+}
+
+void StdIO::outReset(int fd)
+{
+#ifdef WIN32
+    ::_dup2(fd, ::_fileno(stdout));
+#else
+    ::dup2(fd, ::fileno(stdout));
+#endif
+}
+
+void StdIO::inReset(const char* filename)
+{
+#ifdef WIN32
+    ::freopen(filename, "r", stdin);
+#else
+    ::freopen(filename, "r", stdin);
+#endif
+}
+
+void StdIO::outReset(const char* filename)
+{
+#ifdef WIN32
+    ::freopen(filename, "w", stdout);
+#else
+    ::freopen(filename, "w", stdout);
+#endif
+}
 
 #ifdef WIN32
 struct Process::PInfo
@@ -152,6 +191,8 @@ void Process::start()
     {
         case 0://child
         {
+            for(auto& call: forkCall())
+                call();
             ::execvp(cmd_.c_str(), cmdLine.data());
             ::perror("execv");
             ::exit(EXIT_FAILURE);
@@ -176,6 +217,7 @@ void Process::kill()
 #ifdef WIN32
 	::TerminateProcess(pinfo_->process.hProcess, 0);
 #else
+    ::kill(pinfo_->child, SIGTERM);
     ::kill(pinfo_->child, SIGKILL);
 #endif
 }
@@ -263,6 +305,24 @@ int Process::pid() const
 #endif
 }
 
+int Process::shell(const std::string& cmd, uint64_t time)
+{
+    core::Process shell("/bin/sh");
+    shell
+        .arg("-c")
+        .arg(cmd);
+    ;
+
+    shell.start();
+    auto const wret=shell.timedWait(time);
+    if(wret==false)
+    {
+        shell.kill();
+        shell.wait();
+    }
+
+    return shell.exitCode();
+}
 
 }
 
