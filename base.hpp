@@ -15,9 +15,7 @@
 //
 //=====================================================================================
 
-
-#ifndef MR_BASE_HPP
-#define MR_BASE_HPP
+#pragma once
 
 #include<cstddef>
 #include<cstdint>
@@ -141,7 +139,7 @@ public:
     {}
 
     ScopedCall(ScopedCall&& sc)
-        :callit_(true), calls_({std::move(sc.calls_)})
+        :callit_(sc.callit_), calls_({std::move(sc.calls_)})
     {
         sc.callit_=false;
     }
@@ -167,7 +165,7 @@ public:
     }
 
 private:
-    bool callit_=false;
+    bool callit_=true;
     std::list<std::function<void()>> calls_;
 };
 
@@ -214,11 +212,4 @@ static T read(bool sw, const Byte* bt)
 }
 
 }
-
-
-
-
-
-
-#endif //MR_BASE_HPP
 

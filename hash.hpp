@@ -185,6 +185,17 @@ public:
         return ret;
     }
 
+    void encode(std::string& dest) const
+    {
+        dest.append(reinterpret_cast<const char*>(digest_.data()), digest_.size());
+    }
+
+    void decode(uint32_t& s, const std::string& src)
+    {
+        std::memcpy(digest_.data(), src.data()+s, digest_.size());
+        s += digest_.size();
+    }
+
 private:
     std::array<Byte_t, NByte> digest_={{0}};
 };

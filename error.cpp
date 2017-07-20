@@ -46,6 +46,7 @@ const std::vector<CoreError::Unit> CoreError::unitDict_
 
     {eBadStart,         "eBadStart"},
 
+    { eTimerout,             u8"超时"},
     { eTimerStopping,        u8"定时器正在停止"},
     { eNetConnectError,      u8"网络连接错误"},
     { eLogicError,           u8"逻辑错误"},
@@ -58,6 +59,7 @@ const std::vector<CoreError::Unit> CoreError::unitDict_
     { eCmdKeyTypeError,      u8"命令键数据类型错误"},
     { eUnkownDevice,         u8"未知设备"},
     { eUnkownCommand,        u8"未知命令"},
+    { eConvertError,         u8"转换错误"},
 };
 
 CoreError::~CoreError()=default;

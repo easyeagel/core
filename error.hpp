@@ -119,6 +119,7 @@ public:
         eGroupDone,
 
         eBadStart=64,
+        eTimerout, //定时器停止中
         eTimerStopping, //定时器停止中
         eNetConnectError,
         eLogicError,
@@ -132,6 +133,8 @@ public:
         eCmdKeyTypeError, //命令键数据类型错误
         eUnkownDevice,    //未知设备
         eUnkownCommand,
+
+        eConvertError, //转换错误
 
         eEnumCount
     };
